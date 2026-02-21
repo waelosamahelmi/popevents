@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/supabase-auth";
-import { prisma } from "@/lib/prisma";
+import { db, generateId, now } from "@/lib/db";
 
 // GET /api/portfolio - List all portfolio items (public)
 export async function GET(request: NextRequest) {
@@ -8,15 +8,14 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const published = searchParams.get("published");
 
-    const where: any = {};
+    let query = db.from('PortfolioItem').select('*').order('sortOrder', { ascending: true });
+
     if (published === "true") {
-      where.isPublished = true;
+      query = query.eq('isPublished', true);
     }
 
-    const items = await prisma.portfolioItem.findMany({
-      where,
-      orderBy: { sortOrder: "asc" },
-    });
+    const { data: items, error } = await query;
+    if (error) throw error;
 
     return NextResponse.json(items);
   } catch (error) {
@@ -47,16 +46,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const item = await prisma.portfolioItem.create({
-      data: {
-        title,
-        description,
-        eventName,
-        images,
-        sortOrder: sortOrder ?? 0,
-        isPublished: isPublished ?? true,
-      },
-    });
+    const timestamp = now();
+    const { data: item, error } = await db.from('PortfolioItem').insert({
+      id: generateId(),
+      title,
+      description,
+      eventName,
+      images,
+      sortOrder: sortOrder ?? 0,
+      isPublished: isPublished ?? true,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    }).select().single();
+
+    if (error) throw error;
 
     return NextResponse.json(item, { status: 201 });
   } catch (error) {

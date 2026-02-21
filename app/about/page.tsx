@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import { Zap, Users, Award, Target, Info } from "lucide-react";
@@ -6,9 +6,8 @@ import { Zap, Users, Award, Target, Info } from "lucide-react";
 export const dynamic = 'force-dynamic';
 
 async function getSettings() {
-  return prisma.siteSettings.findUnique({
-    where: { id: "main" },
-  });
+  const { data } = await db.from('SiteSettings').select('*').eq('id', 'main').single();
+  return data;
 }
 
 export default async function AboutPage() {

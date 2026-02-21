@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/supabase-auth";
-import { prisma } from "@/lib/prisma";
+import { db, generateId, now } from "@/lib/db";
 import { sendRegistrationNotification } from "@/lib/email";
 
 // GET /api/registrations - List all registrations (admin only)
@@ -16,24 +16,13 @@ export async function GET(request: NextRequest) {
     const eventId = searchParams.get("eventId");
     const status = searchParams.get("status");
 
-    const where: any = {};
-    if (eventId) where.eventId = eventId;
-    if (status) where.status = status;
+    let query = db.from('Registration').select('*, event:Event(id, title, date, location)').order('createdAt', { ascending: false });
 
-    const registrations = await prisma.registration.findMany({
-      where,
-      include: {
-        event: {
-          select: {
-            id: true,
-            title: true,
-            date: true,
-            location: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    if (eventId) query = query.eq('eventId', eventId);
+    if (status) query = query.eq('status', status);
+
+    const { data: registrations, error } = await query;
+    if (error) throw error;
 
     return NextResponse.json(registrations);
   } catch (error) {
@@ -68,14 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if event exists and is published
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
-      include: {
-        _count: {
-          select: { registrations: true },
-        },
-      },
-    });
+    const { data: event } = await db.from('Event').select('*').eq('id', eventId).single();
 
     if (!event) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
@@ -89,20 +71,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Check capacity
-    if (event.maxCapacity && event._count.registrations >= event.maxCapacity) {
-      return NextResponse.json(
-        { error: "This event is fully booked" },
-        { status: 400 }
-      );
+    if (event.maxCapacity) {
+      const { count } = await db.from('Registration').select('*', { count: 'exact', head: true }).eq('eventId', eventId);
+      if ((count || 0) >= event.maxCapacity) {
+        return NextResponse.json(
+          { error: "This event is fully booked" },
+          { status: 400 }
+        );
+      }
     }
 
     // Check for duplicate registration
-    const existingRegistration = await prisma.registration.findFirst({
-      where: {
-        eventId,
-        email,
-      },
-    });
+    const { data: existingRegistration } = await db.from('Registration').select('id').eq('eventId', eventId).eq('email', email).limit(1).maybeSingle();
 
     if (existingRegistration) {
       return NextResponse.json(
@@ -112,21 +92,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Create registration
-    const registration = await prisma.registration.create({
-      data: {
-        eventId,
-        fullName,
-        email,
-        phone,
-        companyName,
-        licenseFileUrl,
-        additionalNotes,
-        status: "pending",
-      },
-      include: {
-        event: true,
-      },
-    });
+    const timestamp = now();
+    const { data: registration, error: insertError } = await db.from('Registration').insert({
+      id: generateId(),
+      eventId,
+      fullName,
+      email,
+      phone,
+      companyName,
+      licenseFileUrl,
+      additionalNotes,
+      status: "pending",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    }).select('*, event:Event(*)').single();
+
+    if (insertError) throw insertError;
 
     // Send notification email
     try {

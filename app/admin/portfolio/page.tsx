@@ -1,12 +1,11 @@
 export const dynamic = 'force-dynamic';
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import Link from "next/link";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 
 async function getPortfolio() {
-  return prisma.portfolioItem.findMany({
-    orderBy: { sortOrder: "asc" },
-  });
+  const { data } = await db.from('PortfolioItem').select('*').order('sortOrder', { ascending: true });
+  return data || [];
 }
 
 export default async function AdminPortfolioPage() {

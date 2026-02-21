@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Calendar as CalendarIcon, MapPin, ClipboardList } from "lucide-react";
@@ -9,11 +9,8 @@ import RegistrationForm from "@/components/events/RegistrationForm";
 export const dynamic = 'force-dynamic';
 
 async function getEvent(slug: string) {
-  const event = await prisma.event.findUnique({
-    where: { slug },
-  });
-
-  return event;
+  const { data } = await db.from('Event').select('*').eq('slug', slug).single();
+  return data;
 }
 
 export default async function EventRegisterPage({
@@ -29,7 +26,8 @@ export default async function EventRegisterPage({
   }
 
   const isPast = new Date(event.date) < new Date();
-  const isFull = event.maxCapacity && (await prisma.registration.count({ where: { eventId: event.id } })) >= event.maxCapacity;
+  const { count } = await db.from('Registration').select('*', { count: 'exact', head: true }).eq('eventId', event.id);
+  const isFull = event.maxCapacity && (count || 0) >= event.maxCapacity;
 
   return (
     <>
@@ -128,7 +126,7 @@ export default async function EventRegisterPage({
                 <RegistrationForm
                   eventId={event.id}
                   eventName={event.title}
-                  eventDate={event.date.toISOString()}
+                  eventDate={event.date}
                   eventLocation={event.location}
                 />
               )}

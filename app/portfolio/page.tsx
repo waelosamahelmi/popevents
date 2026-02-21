@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import PortfolioGallery from "@/components/portfolio/PortfolioGallery";
@@ -6,20 +6,18 @@ import PortfolioGallery from "@/components/portfolio/PortfolioGallery";
 export const dynamic = 'force-dynamic';
 
 async function getPortfolio() {
-  return prisma.portfolioItem.findMany({
-    where: { isPublished: true },
-    orderBy: { sortOrder: "asc" },
-  });
+  const { data } = await db.from('PortfolioItem').select('*').eq('isPublished', true).order('sortOrder', { ascending: true });
+  return data || [];
 }
 
 export default async function PortfolioPage() {
   const items = await getPortfolio();
 
-  // Serialize dates for client component
-  const serializedItems = items.map((item) => ({
+  // Supabase returns dates as ISO strings already
+  const serializedItems = items.map((item: any) => ({
     ...item,
-    createdAt: item.createdAt.toISOString(),
-    updatedAt: item.updatedAt.toISOString(),
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
   }));
 
   return (

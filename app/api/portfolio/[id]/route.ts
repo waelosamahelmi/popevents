@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/supabase-auth";
-import { prisma } from "@/lib/prisma";
+import { db, now } from "@/lib/db";
 
 // GET /api/portfolio/[id] - Get a single portfolio item (public)
 export async function GET(
@@ -9,11 +9,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const item = await prisma.portfolioItem.findUnique({
-      where: { id },
-    });
+    const { data: item, error } = await db.from('PortfolioItem').select('*').eq('id', id).single();
 
-    if (!item) {
+    if (error || !item) {
       return NextResponse.json(
         { error: "Portfolio item not found" },
         { status: 404 }
@@ -46,17 +44,17 @@ export async function PUT(
     const body = await request.json();
     const { title, description, eventName, images, sortOrder, isPublished } = body;
 
-    const item = await prisma.portfolioItem.update({
-      where: { id },
-      data: {
-        ...(title !== undefined && { title }),
-        ...(description !== undefined && { description }),
-        ...(eventName !== undefined && { eventName }),
-        ...(images && { images }),
-        ...(sortOrder !== undefined && { sortOrder }),
-        ...(isPublished !== undefined && { isPublished }),
-      },
-    });
+    const updateData: any = { updatedAt: now() };
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (eventName !== undefined) updateData.eventName = eventName;
+    if (images) updateData.images = images;
+    if (sortOrder !== undefined) updateData.sortOrder = sortOrder;
+    if (isPublished !== undefined) updateData.isPublished = isPublished;
+
+    const { data: item, error } = await db.from('PortfolioItem').update(updateData).eq('id', id).select().single();
+
+    if (error) throw error;
 
     return NextResponse.json(item);
   } catch (error) {
@@ -81,9 +79,7 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    await prisma.portfolioItem.delete({
-      where: { id },
-    });
+    await db.from('PortfolioItem').delete().eq('id', id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

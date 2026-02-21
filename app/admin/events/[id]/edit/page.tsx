@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -12,9 +12,7 @@ export default async function EditEventPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const event = await prisma.event.findUnique({
-    where: { id },
-  });
+  const { data: event } = await db.from('Event').select('*').eq('id', id).single();
 
   if (!event) {
     notFound();
@@ -42,8 +40,8 @@ export default async function EditEventPage({
           title: event.title,
           slug: event.slug,
           description: event.description,
-          date: event.date.toISOString(),
-          endDate: event.endDate?.toISOString(),
+          date: event.date,
+          endDate: event.endDate || undefined,
           location: event.location,
           mapUrl: event.mapUrl || undefined,
           coverImage: event.coverImage,

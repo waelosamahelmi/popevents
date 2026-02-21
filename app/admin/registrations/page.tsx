@@ -1,21 +1,11 @@
 export const dynamic = 'force-dynamic';
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import Link from "next/link";
 import { Eye, MoreHorizontal } from "lucide-react";
 
 async function getRegistrations() {
-  return prisma.registration.findMany({
-    include: {
-      event: {
-        select: {
-          id: true,
-          title: true,
-          date: true,
-        },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const { data } = await db.from('Registration').select('*, event:Event(id, title, date)').order('createdAt', { ascending: false });
+  return data || [];
 }
 
 export default async function AdminRegistrationsPage() {

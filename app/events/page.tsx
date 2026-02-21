@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import EventCard from "@/components/events/EventCard";
@@ -7,18 +7,12 @@ import { Calendar, Clock } from "lucide-react";
 export const dynamic = 'force-dynamic';
 
 async function getEvents() {
-  const [upcomingEvents, pastEvents] = await Promise.all([
-    prisma.event.findMany({
-      where: { isUpcoming: true, isPublished: true },
-      orderBy: { date: "asc" },
-    }),
-    prisma.event.findMany({
-      where: { isUpcoming: false, isPublished: true },
-      orderBy: { date: "desc" },
-    }),
+  const [upcomingRes, pastRes] = await Promise.all([
+    db.from('Event').select('*').eq('isUpcoming', true).eq('isPublished', true).order('date', { ascending: true }),
+    db.from('Event').select('*').eq('isUpcoming', false).eq('isPublished', true).order('date', { ascending: false }),
   ]);
 
-  return { upcomingEvents, pastEvents };
+  return { upcomingEvents: upcomingRes.data || [], pastEvents: pastRes.data || [] };
 }
 
 export default async function EventsPage() {

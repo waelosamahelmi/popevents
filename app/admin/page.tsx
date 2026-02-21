@@ -1,33 +1,25 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { Calendar, Users, Clock, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
 
 async function getStats() {
-  const [totalEvents, upcomingEvents, totalRegistrations, pendingRegistrations, recentRegistrations] =
+  const [totalEventsRes, upcomingEventsRes, totalRegsRes, pendingRegsRes, recentRegsRes] =
     await Promise.all([
-      prisma.event.count(),
-      prisma.event.count({ where: { isUpcoming: true } }),
-      prisma.registration.count(),
-      prisma.registration.count({ where: { status: "pending" } }),
-      prisma.registration.findMany({
-        take: 10,
-        orderBy: { createdAt: "desc" },
-        include: {
-          event: {
-            select: { title: true },
-          },
-        },
-      }),
+      db.from('Event').select('*', { count: 'exact', head: true }),
+      db.from('Event').select('*', { count: 'exact', head: true }).eq('isUpcoming', true),
+      db.from('Registration').select('*', { count: 'exact', head: true }),
+      db.from('Registration').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      db.from('Registration').select('*, event:Event(title)').order('createdAt', { ascending: false }).limit(10),
     ]);
 
   return {
-    totalEvents,
-    upcomingEvents,
-    totalRegistrations,
-    pendingRegistrations,
-    recentRegistrations,
+    totalEvents: totalEventsRes.count || 0,
+    upcomingEvents: upcomingEventsRes.count || 0,
+    totalRegistrations: totalRegsRes.count || 0,
+    pendingRegistrations: pendingRegsRes.count || 0,
+    recentRegistrations: recentRegsRes.data || [],
   };
 }
 

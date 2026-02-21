@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/supabase-auth";
-import { prisma } from "@/lib/prisma";
+import { db, now } from "@/lib/db";
 
 // GET /api/events/[id] - Get a single event (public)
 export async function GET(
@@ -9,20 +9,16 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const event = await prisma.event.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: { registrations: true },
-        },
-      },
-    });
+    const { data: event, error } = await db.from('Event').select('*').eq('id', id).single();
 
-    if (!event) {
+    if (error || !event) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
-    return NextResponse.json(event);
+    // Get registration count
+    const { count } = await db.from('Registration').select('*', { count: 'exact', head: true }).eq('eventId', id);
+
+    return NextResponse.json({ ...event, _count: { registrations: count || 0 } });
   } catch (error) {
     console.error("Error fetching event:", error);
     return NextResponse.json(
@@ -60,22 +56,22 @@ export async function PUT(
       maxCapacity,
     } = body;
 
-    const event = await prisma.event.update({
-      where: { id },
-      data: {
-        ...(title && { title }),
-        ...(slug && { slug }),
-        ...(description && { description }),
-        ...(date && { date: new Date(date) }),
-        ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
-        ...(location && { location }),
-        ...(mapUrl !== undefined && { mapUrl }),
-        ...(coverImage && { coverImage }),
-        ...(isUpcoming !== undefined && { isUpcoming }),
-        ...(isPublished !== undefined && { isPublished }),
-        ...(maxCapacity !== undefined && { maxCapacity }),
-      },
-    });
+    const updateData: any = { updatedAt: now() };
+    if (title) updateData.title = title;
+    if (slug) updateData.slug = slug;
+    if (description) updateData.description = description;
+    if (date) updateData.date = new Date(date).toISOString();
+    if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate).toISOString() : null;
+    if (location) updateData.location = location;
+    if (mapUrl !== undefined) updateData.mapUrl = mapUrl;
+    if (coverImage) updateData.coverImage = coverImage;
+    if (isUpcoming !== undefined) updateData.isUpcoming = isUpcoming;
+    if (isPublished !== undefined) updateData.isPublished = isPublished;
+    if (maxCapacity !== undefined) updateData.maxCapacity = maxCapacity;
+
+    const { data: event, error } = await db.from('Event').update(updateData).eq('id', id).select().single();
+
+    if (error) throw error;
 
     return NextResponse.json(event);
   } catch (error) {
@@ -100,9 +96,9 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    await prisma.event.delete({
-      where: { id },
-    });
+    // Delete registrations first (cascade)
+    await db.from('Registration').delete().eq('eventId', id);
+    await db.from('Event').delete().eq('id', id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

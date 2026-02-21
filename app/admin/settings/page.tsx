@@ -1,10 +1,9 @@
 export const dynamic = 'force-dynamic';
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
+import { now } from "@/lib/db";
 
 async function getSettings() {
-  const settings = await prisma.siteSettings.findUnique({
-    where: { id: "main" },
-  });
+  const { data: settings } = await db.from('SiteSettings').select('*').eq('id', 'main').single();
 
   return (
     settings || {
@@ -28,6 +27,7 @@ export default async function AdminSettingsPage() {
 
   async function updateSettings(formData: FormData) {
     "use server";
+    const { db, now } = await import("@/lib/db");
 
     const data = {
       companyName: formData.get("companyName") as string,
@@ -43,10 +43,10 @@ export default async function AdminSettingsPage() {
       mapEmbedUrl: formData.get("mapEmbedUrl") as string,
     };
 
-    await prisma.siteSettings.upsert({
-      where: { id: "main" },
-      update: data,
-      create: { id: "main", ...data },
+    await db.from('SiteSettings').upsert({
+      id: "main",
+      ...data,
+      updatedAt: now(),
     });
   }
 

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Calendar as CalendarIcon, ArrowLeft, ArrowRight, Clock } from "lucide-react";
@@ -8,16 +8,13 @@ import Footer from "@/components/shared/Footer";
 export const dynamic = 'force-dynamic';
 
 async function getEvent(slug: string) {
-  const event = await prisma.event.findUnique({
-    where: { slug },
-    include: {
-      _count: {
-        select: { registrations: true },
-      },
-    },
-  });
+  const { data: event } = await db.from('Event').select('*').eq('slug', slug).single();
+  if (!event) return null;
 
-  return event;
+  // Get registration count
+  const { count } = await db.from('Registration').select('*', { count: 'exact', head: true }).eq('eventId', event.id);
+
+  return { ...event, _count: { registrations: count || 0 } };
 }
 
 export default async function EventDetailPage({

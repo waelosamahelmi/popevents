@@ -1,18 +1,25 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import Link from "next/link";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
 async function getEvents() {
-  return prisma.event.findMany({
-    include: {
-      _count: {
-        select: { registrations: true },
-      },
-    },
-    orderBy: { date: "desc" },
-  });
+  // Get all events
+  const { data: events } = await db.from('Event').select('*').order('date', { ascending: false });
+  if (!events) return [];
+
+  // Get registration counts for all events
+  const eventIds = events.map((e: any) => e.id);
+  const countsPromises = eventIds.map((id: string) =>
+    db.from('Registration').select('*', { count: 'exact', head: true }).eq('eventId', id)
+  );
+  const countsResults = await Promise.all(countsPromises);
+
+  return events.map((event: any, i: number) => ({
+    ...event,
+    _count: { registrations: countsResults[i].count || 0 },
+  }));
 }
 
 export default async function AdminEventsPage() {

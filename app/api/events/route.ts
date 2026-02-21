@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/supabase-auth";
-import { prisma } from "@/lib/prisma";
+import { db, generateId, now } from "@/lib/db";
 import { generateSlug } from "@/lib/utils";
 
 // GET /api/events - List all events (public) or with filters
@@ -10,27 +10,28 @@ export async function GET(request: NextRequest) {
     const upcoming = searchParams.get("upcoming");
     const published = searchParams.get("published");
 
-    const where: any = {};
+    let query = db.from('Event').select('*').order('date', { ascending: true });
 
     if (upcoming === "true") {
-      where.isUpcoming = true;
+      query = query.eq('isUpcoming', true);
     }
 
     if (published === "true") {
-      where.isPublished = true;
+      query = query.eq('isPublished', true);
     }
 
-    const events = await prisma.event.findMany({
-      where,
-      orderBy: { date: "asc" },
-      include: {
-        _count: {
-          select: { registrations: true },
-        },
-      },
-    });
+    const { data: events, error } = await query;
+    if (error) throw error;
 
-    return NextResponse.json(events);
+    // Get registration counts for each event
+    const eventsWithCounts = await Promise.all(
+      (events || []).map(async (event: any) => {
+        const { count } = await db.from('Registration').select('*', { count: 'exact', head: true }).eq('eventId', event.id);
+        return { ...event, _count: { registrations: count || 0 } };
+      })
+    );
+
+    return NextResponse.json(eventsWithCounts);
   } catch (error) {
     console.error("Error fetching events:", error);
     return NextResponse.json(
@@ -64,36 +65,39 @@ export async function POST(request: NextRequest) {
       maxCapacity,
     } = body;
 
-    // Generate slug if not provided
     const eventSlug = slug || generateSlug(title);
+    const timestamp = now();
 
-    const event = await prisma.event.create({
-      data: {
-        title,
-        slug: eventSlug,
-        description,
-        date: new Date(date),
-        endDate: endDate ? new Date(endDate) : null,
-        location,
-        mapUrl,
-        coverImage,
-        isUpcoming: isUpcoming ?? true,
-        isPublished: isPublished ?? true,
-        maxCapacity,
-      },
-    });
+    const { data: event, error } = await db.from('Event').insert({
+      id: generateId(),
+      title,
+      slug: eventSlug,
+      description,
+      date: new Date(date).toISOString(),
+      endDate: endDate ? new Date(endDate).toISOString() : null,
+      location,
+      mapUrl,
+      coverImage,
+      isUpcoming: isUpcoming ?? true,
+      isPublished: isPublished ?? true,
+      maxCapacity,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    }).select().single();
+
+    if (error) {
+      if (error.code === '23505') {
+        return NextResponse.json(
+          { error: "An event with this slug already exists" },
+          { status: 409 }
+        );
+      }
+      throw error;
+    }
 
     return NextResponse.json(event, { status: 201 });
   } catch (error: any) {
     console.error("Error creating event:", error);
-
-    if (error.code === "P2002") {
-      return NextResponse.json(
-        { error: "An event with this slug already exists" },
-        { status: 409 }
-      );
-    }
-
     return NextResponse.json(
       { error: "Failed to create event" },
       { status: 500 }

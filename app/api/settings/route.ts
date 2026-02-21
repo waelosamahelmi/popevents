@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/supabase-auth";
-import { prisma } from "@/lib/prisma";
+import { db, now } from "@/lib/db";
 
 // GET /api/settings - Get site settings (public)
 export async function GET() {
   try {
-    const settings = await prisma.siteSettings.findUnique({
-      where: { id: "main" },
-    });
+    const { data: settings } = await db.from('SiteSettings').select('*').eq('id', 'main').single();
 
     if (!settings) {
-      // Return default settings if none exist
       return NextResponse.json({
         id: "main",
         companyName: "Pop Events",
@@ -39,14 +36,13 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
 
-    const settings = await prisma.siteSettings.upsert({
-      where: { id: "main" },
-      update: body,
-      create: {
-        id: "main",
-        ...body,
-      },
-    });
+    const { data: settings, error } = await db.from('SiteSettings').upsert({
+      id: "main",
+      ...body,
+      updatedAt: now(),
+    }).select().single();
+
+    if (error) throw error;
 
     return NextResponse.json(settings);
   } catch (error) {

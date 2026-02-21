@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -12,9 +12,7 @@ export default async function EditPortfolioPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const item = await prisma.portfolioItem.findUnique({
-    where: { id },
-  });
+  const { data: item } = await db.from('PortfolioItem').select('*').eq('id', id).single();
 
   if (!item) {
     notFound();

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/supabase-auth";
-import { prisma } from "@/lib/prisma";
+import { db, now } from "@/lib/db";
 
 // GET /api/registrations/[id] - Get a single registration (admin only)
 export async function GET(
@@ -15,14 +15,9 @@ export async function GET(
     }
 
     const { id } = await params;
-    const registration = await prisma.registration.findUnique({
-      where: { id },
-      include: {
-        event: true,
-      },
-    });
+    const { data: registration, error } = await db.from('Registration').select('*, event:Event(*)').eq('id', id).single();
 
-    if (!registration) {
+    if (error || !registration) {
       return NextResponse.json(
         { error: "Registration not found" },
         { status: 404 }
@@ -62,13 +57,9 @@ export async function PUT(
       );
     }
 
-    const registration = await prisma.registration.update({
-      where: { id },
-      data: { status },
-      include: {
-        event: true,
-      },
-    });
+    const { data: registration, error: updateError } = await db.from('Registration').update({ status, updatedAt: now() }).eq('id', id).select('*, event:Event(*)').single();
+
+    if (updateError) throw updateError;
 
     return NextResponse.json(registration);
   } catch (error) {
@@ -93,9 +84,7 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    await prisma.registration.delete({
-      where: { id },
-    });
+    await db.from('Registration').delete().eq('id', id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

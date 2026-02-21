@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import HeroSection from "@/components/home/HeroSection";
@@ -10,23 +10,17 @@ import CTASection from "@/components/home/CTASection";
 export const dynamic = 'force-dynamic';
 
 async function getHomePageData() {
-  const [upcomingEvents, portfolioItems, settings] = await Promise.all([
-    prisma.event.findMany({
-      where: { isUpcoming: true, isPublished: true },
-      orderBy: { date: "asc" },
-      take: 3,
-    }),
-    prisma.portfolioItem.findMany({
-      where: { isPublished: true },
-      orderBy: { sortOrder: "asc" },
-      take: 6,
-    }),
-    prisma.siteSettings.findUnique({
-      where: { id: "main" },
-    }),
+  const [eventsRes, portfolioRes, settingsRes] = await Promise.all([
+    db.from('Event').select('*').eq('isUpcoming', true).eq('isPublished', true).order('date', { ascending: true }).limit(3),
+    db.from('PortfolioItem').select('*').eq('isPublished', true).order('sortOrder', { ascending: true }).limit(6),
+    db.from('SiteSettings').select('*').eq('id', 'main').single(),
   ]);
 
-  return { upcomingEvents, portfolioItems, settings };
+  return {
+    upcomingEvents: eventsRes.data || [],
+    portfolioItems: portfolioRes.data || [],
+    settings: settingsRes.data,
+  };
 }
 
 export default async function HomePage() {
