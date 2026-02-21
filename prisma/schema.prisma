@@ -1,0 +1,77 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Event {
+  id            String         @id @default(cuid())
+  title         String
+  slug          String         @unique
+  description   String         @db.Text
+  date          DateTime
+  endDate       DateTime?
+  location      String
+  mapUrl        String?        // Google Maps embed URL
+  coverImage    String         // URL from Supabase Storage
+  isUpcoming    Boolean        @default(true)
+  isPublished   Boolean        @default(true)
+  maxCapacity   Int?
+  registrations Registration[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Registration {
+  id              String   @id @default(cuid())
+  eventId         String
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  fullName        String
+  email           String
+  phone           String
+  companyName     String?
+  licenseFileUrl  String?  // uploaded license/permit file URL
+  additionalNotes String?  @db.Text
+  status          String   @default("pending") // pending, approved, rejected
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([eventId])
+  @@index([status])
+}
+
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  eventName   String?  // which event this is from
+  images      String[] // array of Supabase Storage URLs
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SiteSettings {
+  id            String  @id @default("main")
+  companyName   String  @default("Pop Events")
+  tagline       String? @default("Your Premier Event Partner in Kuwait")
+  aboutText     String? @db.Text
+  email         String?
+  phone         String?
+  whatsapp      String?
+  instagram     String?
+  tiktok        String?
+  twitter       String?
+  address       String?
+  mapEmbedUrl   String?
+  logoUrl       String?
+  heroImageUrl  String?
+  updatedAt     DateTime @updatedAt
+}
