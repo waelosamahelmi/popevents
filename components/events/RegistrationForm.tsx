@@ -27,7 +27,11 @@ export default function RegistrationForm({
     email: "",
     phone: "",
     companyName: "",
-    licenseFileUrl: "",
+    companyLicenseUrl: "",
+    signatureUrl: "",
+    civilIdUrl: "",
+    healthLicenseUrl: "",
+    logoUrl: "",
     additionalNotes: "",
   });
 
@@ -97,17 +101,19 @@ export default function RegistrationForm({
 
       {/* Personal Info */}
       <div className="space-y-5">
+        <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">Contact Information</h3>
+
         <div>
           <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
-            Full Name *
+            Company Name *
           </label>
           <input
             type="text"
-            value={formData.fullName}
-            onChange={(e) => setFormData((prev) => ({ ...prev, fullName: e.target.value }))}
+            value={formData.companyName}
+            onChange={(e) => setFormData((prev) => ({ ...prev, companyName: e.target.value }))}
             required
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-white/20 focus:border-white/20 outline-none text-white placeholder-white/30 transition-all duration-300 hover:border-white/20"
-            placeholder="John Doe"
+            placeholder="Your company name"
           />
         </div>
 
@@ -121,13 +127,13 @@ export default function RegistrationForm({
             onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
             required
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-white/20 focus:border-white/20 outline-none text-white placeholder-white/30 transition-all duration-300 hover:border-white/20"
-            placeholder="john@example.com"
+            placeholder="company@example.com"
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
-            Phone *
+            Contact Number *
           </label>
           <input
             type="tel"
@@ -138,41 +144,92 @@ export default function RegistrationForm({
             placeholder="+965 XXXX XXXX"
           />
         </div>
+      </div>
+
+      {/* Document Uploads */}
+      <div className="space-y-6">
+        <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">Required Documents</h3>
 
         <div>
           <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
-            Company Name
+            Company License *
           </label>
-          <input
-            type="text"
-            value={formData.companyName}
-            onChange={(e) => setFormData((prev) => ({ ...prev, companyName: e.target.value }))}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-white/20 focus:border-white/20 outline-none text-white placeholder-white/30 transition-all duration-300 hover:border-white/20"
-            placeholder="Your company name (optional)"
+          <p className="text-sm text-white/30 mb-3">
+            Upload your company license (PDF, JPG, PNG)
+          </p>
+          <FileUploader
+            initialFile={formData.companyLicenseUrl}
+            onFileChange={(url) => setFormData((prev) => ({ ...prev, companyLicenseUrl: url }))}
+            folder="registrations/licenses"
+            accept="application/pdf,image/jpeg,image/png"
           />
         </div>
-      </div>
 
-      {/* License Upload */}
-      <div>
-        <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
-          License / Permit Document
-        </label>
-        <p className="text-sm text-white/30 mb-3">
-          Upload any relevant business licenses or permits (PDF, JPG, PNG)
-        </p>
-        <FileUploader
-          initialFile={formData.licenseFileUrl}
-          onFileChange={(url) => setFormData((prev) => ({ ...prev, licenseFileUrl: url }))}
-          folder="registrations"
-          accept="application/pdf,image/jpeg,image/png"
-        />
+        <div>
+          <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
+            Authorized Signature *
+          </label>
+          <p className="text-sm text-white/30 mb-3">
+            Upload authorized person signature (JPG, PNG)
+          </p>
+          <FileUploader
+            initialFile={formData.signatureUrl}
+            onFileChange={(url) => setFormData((prev) => ({ ...prev, signatureUrl: url }))}
+            folder="registrations/signatures"
+            accept="image/jpeg,image/png"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
+            Civil ID *
+          </label>
+          <p className="text-sm text-white/30 mb-3">
+            Upload civil ID document (PDF, JPG, PNG)
+          </p>
+          <FileUploader
+            initialFile={formData.civilIdUrl}
+            onFileChange={(url) => setFormData((prev) => ({ ...prev, civilIdUrl: url }))}
+            folder="registrations/civil-ids"
+            accept="application/pdf,image/jpeg,image/png"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
+            Health License *
+          </label>
+          <p className="text-sm text-white/30 mb-3">
+            Upload health license document (PDF, JPG, PNG)
+          </p>
+          <FileUploader
+            initialFile={formData.healthLicenseUrl}
+            onFileChange={(url) => setFormData((prev) => ({ ...prev, healthLicenseUrl: url }))}
+            folder="registrations/health-licenses"
+            accept="application/pdf,image/jpeg,image/png"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
+            Company Logo
+          </label>
+          <p className="text-sm text-white/30 mb-3">
+            Upload your company logo (JPG, PNG, WebP)
+          </p>
+          <FileUploader
+            initialFile={formData.logoUrl}
+            onFileChange={(url) => setFormData((prev) => ({ ...prev, logoUrl: url }))}
+            folder="registrations/logos"
+            accept="image/jpeg,image/png,image/webp"
+          />
+        </div>
       </div>
 
       {/* Additional Notes */}
       <div>
         <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
-          Additional Notes
+          Remarks
         </label>
         <textarea
           value={formData.additionalNotes}

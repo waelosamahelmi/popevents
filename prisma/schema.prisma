@@ -29,18 +29,22 @@ model Event {
 }
 
 model Registration {
-  id              String   @id @default(cuid())
-  eventId         String
-  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  fullName        String
-  email           String
-  phone           String
-  companyName     String?
-  licenseFileUrl  String?  // uploaded license/permit file URL
-  additionalNotes String?  @db.Text
-  status          String   @default("pending") // pending, approved, rejected
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                String   @id @default(cuid())
+  eventId           String
+  event             Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  fullName          String
+  email             String
+  phone             String
+  companyName       String?  @db.Text
+  companyLicenseUrl String?  // uploaded company license file URL
+  signatureUrl      String?  // uploaded authorized signature file URL
+  civilIdUrl        String?  // uploaded civil ID file URL
+  healthLicenseUrl  String?  // uploaded health license file URL
+  logoUrl           String?  // uploaded company logo file URL
+  additionalNotes   String?  @db.Text
+  status            String   @default("pending") // pending, approved, rejected
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@index([eventId])
   @@index([status])

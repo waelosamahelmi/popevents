@@ -40,18 +40,29 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       eventId,
-      fullName,
       email,
       phone,
       companyName,
-      licenseFileUrl,
+      companyLicenseUrl,
+      signatureUrl,
+      civilIdUrl,
+      healthLicenseUrl,
+      logoUrl,
       additionalNotes,
     } = body;
 
     // Validate required fields
-    if (!eventId || !fullName || !email || !phone) {
+    if (!eventId || !email || !phone || !companyName) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required fields: company name, email, and phone are required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate required documents
+    if (!companyLicenseUrl || !signatureUrl || !civilIdUrl || !healthLicenseUrl) {
+      return NextResponse.json(
+        { error: "Missing required documents: company license, signature, civil ID, and health license are required" },
         { status: 400 }
       );
     }
@@ -96,11 +107,15 @@ export async function POST(request: NextRequest) {
     const { data: registration, error: insertError } = await db.from('Registration').insert({
       id: generateId(),
       eventId,
-      fullName,
+      fullName: companyName, // Using companyName as fullName since that's the primary identifier
       email,
       phone,
       companyName,
-      licenseFileUrl,
+      companyLicenseUrl,
+      signatureUrl,
+      civilIdUrl,
+      healthLicenseUrl,
+      logoUrl,
       additionalNotes,
       status: "pending",
       createdAt: timestamp,

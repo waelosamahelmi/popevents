@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Download, Mail, Phone, Building, FileText } from "lucide-react";
+import { ArrowLeft, Download, Mail, Phone, Building, FileText, Image as ImageIcon, FileCheck } from "lucide-react";
 
 interface Registration {
   id: string;
@@ -11,7 +11,11 @@ interface Registration {
   email: string;
   phone: string;
   companyName?: string;
-  licenseFileUrl?: string;
+  companyLicenseUrl?: string;
+  signatureUrl?: string;
+  civilIdUrl?: string;
+  healthLicenseUrl?: string;
+  logoUrl?: string;
   additionalNotes?: string;
   status: string;
   createdAt: string;
@@ -21,6 +25,13 @@ interface Registration {
     date: string;
     location: string;
   };
+}
+
+interface DocumentItem {
+  label: string;
+  url?: string;
+  icon: React.ReactNode;
+  folder: string;
 }
 
 export default function RegistrationDetailPage({
@@ -76,6 +87,39 @@ export default function RegistrationDetailPage({
     return <div className="text-center py-12">Registration not found</div>;
   }
 
+  const documents: DocumentItem[] = [
+    {
+      label: "Company License",
+      url: registration.companyLicenseUrl,
+      icon: <FileCheck size={20} className="text-purple-700" />,
+      folder: "licenses",
+    },
+    {
+      label: "Authorized Signature",
+      url: registration.signatureUrl,
+      icon: <FileText size={20} className="text-blue-700" />,
+      folder: "signatures",
+    },
+    {
+      label: "Civil ID",
+      url: registration.civilIdUrl,
+      icon: <FileText size={20} className="text-green-700" />,
+      folder: "civil-ids",
+    },
+    {
+      label: "Health License",
+      url: registration.healthLicenseUrl,
+      icon: <FileCheck size={20} className="text-red-700" />,
+      folder: "health-licenses",
+    },
+    {
+      label: "Company Logo",
+      url: registration.logoUrl,
+      icon: <ImageIcon size={20} className="text-orange-700" />,
+      folder: "logos",
+    },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -97,8 +141,20 @@ export default function RegistrationDetailPage({
         <div className="lg:col-span-2 space-y-6">
           {/* Registrant info */}
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Registrant Information</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Information</h3>
             <div className="space-y-4">
+              {registration.companyName && (
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Building size={20} className="text-blue-700" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Company Name</p>
+                    <p className="text-gray-900 font-medium">{registration.companyName}</p>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-purple-100 rounded-lg">
                   <Mail size={20} className="text-purple-700" />
@@ -128,42 +184,55 @@ export default function RegistrationDetailPage({
                   </a>
                 </div>
               </div>
+            </div>
+          </div>
 
-              {registration.companyName && (
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Building size={20} className="text-blue-700" />
+          {/* Documents */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Uploaded Documents</h3>
+            <div className="space-y-3">
+              {documents.map((doc) => (
+                doc.url ? (
+                  <div key={doc.folder} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${
+                        doc.folder === 'licenses' ? 'bg-purple-100' :
+                        doc.folder === 'signatures' ? 'bg-blue-100' :
+                        doc.folder === 'civil-ids' ? 'bg-green-100' :
+                        doc.folder === 'health-licenses' ? 'bg-red-100' :
+                        'bg-orange-100'
+                      }`}>
+                        {doc.icon}
+                      </div>
+                      <p className="font-medium text-gray-900">{doc.label}</p>
+                    </div>
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
+                    >
+                      <Download size={16} />
+                      View
+                    </a>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Company</p>
-                    <p className="text-gray-900">{registration.companyName}</p>
+                ) : (
+                  <div key={doc.folder} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                    <div className="p-2 bg-gray-200 rounded-lg opacity-50">
+                      {doc.icon}
+                    </div>
+                    <p className="text-gray-500">{doc.label} - Not uploaded</p>
                   </div>
-                </div>
-              )}
+                )
+              ))}
             </div>
           </div>
 
           {/* Additional notes */}
           {registration.additionalNotes && (
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Notes</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Remarks</h3>
               <p className="text-gray-700 whitespace-pre-wrap">{registration.additionalNotes}</p>
-            </div>
-          )}
-
-          {/* License file */}
-          {registration.licenseFileUrl && (
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">License/Permit Document</h3>
-              <a
-                href={registration.licenseFileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition"
-              >
-                <Download size={18} />
-                Download Document
-              </a>
             </div>
           )}
         </div>
