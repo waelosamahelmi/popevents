@@ -7,11 +7,17 @@ import { ArrowLeft, Download, Mail, Phone, Building, FileText } from "lucide-rea
 
 interface Registration {
   id: string;
-  fullName: string;
+  fullName: string; // contact person
   email: string;
   phone: string;
-  companyName?: string;
+  companyName?: string; // business name
+  instagram?: string;
+  vendorCategory?: string;
+  description?: string;
   licenseFileUrl?: string;
+  healthCertUrl?: string;
+  civilIdUrl?: string;
+  businessLogoUrl?: string;
   additionalNotes?: string;
   status: string;
   createdAt: string;
@@ -87,7 +93,7 @@ export default function RegistrationDetailPage({
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Registration Details</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Vendor Application</h2>
           <p className="text-gray-600">{registration.event.title}</p>
         </div>
       </div>
@@ -95,19 +101,32 @@ export default function RegistrationDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main info */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Registrant info */}
+          {/* Vendor info */}
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Registrant Information</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Vendor Information</h3>
             <div className="space-y-4">
+              {registration.companyName && (
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Building size={20} className="text-blue-700" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Business Name</p>
+                    <p className="text-gray-900">{registration.companyName}</p>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-purple-100 rounded-lg">
                   <Mail size={20} className="text-purple-700" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="text-sm text-gray-500">Contact Person</p>
+                  <p className="text-gray-900">{registration.fullName}</p>
                   <a
                     href={`mailto:${registration.email}`}
-                    className="text-gray-900 hover:text-purple-700"
+                    className="text-sm text-gray-600 hover:text-purple-700"
                   >
                     {registration.email}
                   </a>
@@ -129,19 +148,32 @@ export default function RegistrationDetailPage({
                 </div>
               </div>
 
-              {registration.companyName && (
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Building size={20} className="text-blue-700" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Company</p>
-                    <p className="text-gray-900">{registration.companyName}</p>
-                  </div>
+              {(registration.instagram || registration.vendorCategory) && (
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                  {registration.instagram && (
+                    <div>
+                      <p className="text-sm text-gray-500">Instagram</p>
+                      <p className="text-gray-900">{registration.instagram}</p>
+                    </div>
+                  )}
+                  {registration.vendorCategory && (
+                    <div>
+                      <p className="text-sm text-gray-500">Category</p>
+                      <p className="text-gray-900">{registration.vendorCategory}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
+
+          {/* Description */}
+          {registration.description && (
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Brief Description</h3>
+              <p className="text-gray-700 whitespace-pre-wrap">{registration.description}</p>
+            </div>
+          )}
 
           {/* Additional notes */}
           {registration.additionalNotes && (
@@ -151,21 +183,39 @@ export default function RegistrationDetailPage({
             </div>
           )}
 
-          {/* License file */}
-          {registration.licenseFileUrl && (
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">License/Permit Document</h3>
-              <a
-                href={registration.licenseFileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition"
-              >
-                <Download size={18} />
-                Download Document
-              </a>
+          {/* Documents */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Documents</h3>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { label: "📄 Company License", url: registration.licenseFileUrl },
+                { label: "📋 Health Certificate", url: registration.healthCertUrl },
+                { label: "📺 Civil ID", url: registration.civilIdUrl },
+                { label: "🖼 Business Logo", url: registration.businessLogoUrl },
+              ].map((doc) =>
+                doc.url ? (
+                  <a
+                    key={doc.label}
+                    href={doc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-between gap-2 px-4 py-3 bg-purple-50 text-purple-800 rounded-lg hover:bg-purple-100 transition border border-purple-100"
+                  >
+                    <span className="text-sm font-medium">{doc.label}</span>
+                    <Download size={16} />
+                  </a>
+                ) : (
+                  <div
+                    key={doc.label}
+                    className="inline-flex items-center gap-2 px-4 py-3 bg-gray-50 text-gray-400 rounded-lg border border-gray-100"
+                  >
+                    <FileText size={16} />
+                    <span className="text-sm">{doc.label} — not provided</span>
+                  </div>
+                )
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Sidebar */}

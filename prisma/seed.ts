@@ -61,38 +61,38 @@ Don't miss this incredible celebration of coffee culture!`,
   });
   console.log('✅ Coffee Festival event created');
 
-  const foodArtMarket = await prisma.event.upsert({
-    where: { slug: 'food-art-market-2026' },
+  const bigFest = await prisma.event.upsert({
+    where: { slug: 'the-big-fest-2026' },
     update: {},
     create: {
-      title: 'Food & Art Market 2026',
-      slug: 'food-art-market-2026',
+      title: 'The Big Fest 2026',
+      slug: 'the-big-fest-2026',
       description: `## About the Event
 
-Experience the perfect blend of culinary arts and creative expression at the Food & Art Market 2026. This unique event showcases Kuwait's talented food vendors and artists in one vibrant location.
+The Big Fest 2026 is Kuwait's largest multi-vendor festival — a vibrant celebration bringing together food, retail, arts, and entertainment under one roof.
 
 ### Highlights
 
-- **Artisan Food Vendors**: From traditional Kuwaiti dishes to international cuisine
-- **Local Artists**: Paintings, sculptures, crafts, and more
-- **Live Art Demonstrations**: Watch artists create masterpieces
-- **Workshops**: Learn cooking techniques and art skills
-- **Family Friendly**: Activities for all ages
+- **100+ Vendors**: Food, beverage, retail, and lifestyle brands
+- **Live Entertainment**: Music, performances, and shows
+- **Family Zone**: Activities and attractions for all ages
+- **Workshops & Pop-ups**: Interactive experiences throughout the venue
+- **Networking**: Connect with brands and creators across Kuwait
 
-### Location
+### Venue
 
-Set in the beautiful Al Shaheed Park, this outdoor market offers a stunning backdrop for a day of food, art, and culture.`,
+Held at a premier Kuwait venue with expansive indoor and outdoor areas, The Big Fest welcomes tens of thousands of visitors across the weekend.`,
       date: new Date('2026-04-10T14:00:00Z'),
       endDate: new Date('2026-04-12T22:00:00Z'),
-      location: 'Al Shaheed Park, Kuwait City',
-      mapUrl: 'https://maps.google.com/maps?q=Al+Shaheed+Park+Kuwait&t=&z=13&ie=UTF8&iwloc=&output=embed',
-      coverImage: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200&h=600&fit=crop',
+      location: 'Kuwait City, Kuwait',
+      mapUrl: 'https://maps.google.com/maps?q=Kuwait+City&t=&z=13&ie=UTF8&iwloc=&output=embed',
+      coverImage: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1200&h=600&fit=crop',
       isUpcoming: true,
       isPublished: true,
-      maxCapacity: 5000,
+      maxCapacity: 20000,
     },
   });
-  console.log('✅ Food & Art Market event created');
+  console.log('✅ The Big Fest event created');
 
   // Create portfolio items
   await prisma.portfolioItem.create({

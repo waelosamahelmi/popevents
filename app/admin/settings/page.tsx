@@ -19,6 +19,13 @@ async function getSettings() {
       twitter: "",
       address: "",
       mapEmbedUrl: "",
+      smtpHost: "",
+      smtpPort: 465,
+      smtpSecure: true,
+      smtpUser: "",
+      smtpPass: "",
+      smtpFrom: "",
+      notificationEmail: "",
     }
   );
 }
@@ -29,7 +36,7 @@ export default async function AdminSettingsPage() {
   async function updateSettings(formData: FormData) {
     "use server";
 
-    const data = {
+    const data: Record<string, unknown> = {
       companyName: formData.get("companyName") as string,
       tagline: formData.get("tagline") as string,
       aboutText: formData.get("aboutText") as string,
@@ -41,7 +48,21 @@ export default async function AdminSettingsPage() {
       twitter: formData.get("twitter") as string,
       address: formData.get("address") as string,
       mapEmbedUrl: formData.get("mapEmbedUrl") as string,
+      // Email / SMTP
+      smtpHost: (formData.get("smtpHost") as string) || null,
+      smtpPort: parseInt((formData.get("smtpPort") as string) || "465", 10),
+      smtpSecure: formData.get("smtpSecure") === "on",
+      smtpUser: (formData.get("smtpUser") as string) || null,
+      smtpFrom: (formData.get("smtpFrom") as string) || null,
+      notificationEmail: (formData.get("notificationEmail") as string) || null,
     };
+
+    // Only overwrite the SMTP password when a new value is typed — a blank
+    // field means "keep the existing password" (we never echo it back).
+    const newSmtpPass = (formData.get("smtpPass") as string)?.trim();
+    if (newSmtpPass) {
+      data.smtpPass = newSmtpPass;
+    }
 
     await prisma.siteSettings.upsert({
       where: { id: "main" },
@@ -198,6 +219,100 @@ export default async function AdminSettingsPage() {
                 defaultValue={settings.twitter || ""}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Email Notifications (SMTP) */}
+        <div className="bg-white rounded-xl shadow-sm p-6 space-y-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Email Notifications</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              SMTP settings used to send vendor-application and contact-form notifications.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Notification Recipient
+              </label>
+              <input
+                name="notificationEmail"
+                type="email"
+                defaultValue={settings.notificationEmail || ""}
+                placeholder="admin@popeventskuwait.com"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+              />
+              <p className="text-xs text-gray-400 mt-1">Where new applications & messages are sent.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">SMTP Host</label>
+              <input
+                name="smtpHost"
+                defaultValue={settings.smtpHost || ""}
+                placeholder="smtp.hostinger.com"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Port</label>
+                <input
+                  name="smtpPort"
+                  type="number"
+                  defaultValue={settings.smtpPort ?? 465}
+                  placeholder="465"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                />
+              </div>
+              <div className="flex items-center pt-8">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <input
+                    name="smtpSecure"
+                    type="checkbox"
+                    defaultChecked={settings.smtpSecure ?? true}
+                    className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  />
+                  Use TLS/SSL
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">SMTP Username</label>
+              <input
+                name="smtpUser"
+                defaultValue={settings.smtpUser || ""}
+                placeholder="you@yourdomain.com"
+                autoComplete="off"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">SMTP Password</label>
+              <input
+                name="smtpPass"
+                type="password"
+                autoComplete="new-password"
+                placeholder={settings.smtpPass ? "•••••••• (leave blank to keep)" : "Enter password"}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+              />
+              <p className="text-xs text-gray-400 mt-1">Stored securely; never shown after saving.</p>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">From Address</label>
+              <input
+                name="smtpFrom"
+                defaultValue={settings.smtpFrom || ""}
+                placeholder="noreply@popeventskuwait.com"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+              />
+              <p className="text-xs text-gray-400 mt-1">Falls back to the SMTP username if left blank.</p>
             </div>
           </div>
         </div>

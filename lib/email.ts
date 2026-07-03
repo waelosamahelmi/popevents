@@ -1,21 +1,54 @@
 import nodemailer from 'nodemailer';
+import { prisma } from './prisma';
 
-const notificationEmail = process.env.NOTIFICATION_EMAIL || 'admin@popeventskuwait.com';
+// Resolve SMTP config: admin settings (DB) take precedence, then env vars.
+async function getSmtpConfig() {
+  let s: {
+    smtpHost?: string | null;
+    smtpPort?: number | null;
+    smtpSecure?: boolean | null;
+    smtpUser?: string | null;
+    smtpPass?: string | null;
+    smtpFrom?: string | null;
+    notificationEmail?: string | null;
+  } | null = null;
 
-function getSmtpTransport() {
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    return null;
+  try {
+    s = await prisma.siteSettings.findUnique({
+      where: { id: 'main' },
+      select: {
+        smtpHost: true, smtpPort: true, smtpSecure: true,
+        smtpUser: true, smtpPass: true, smtpFrom: true, notificationEmail: true,
+      },
+    });
+  } catch {
+    // DB unavailable — fall back to env below.
   }
 
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
+  const host = s?.smtpHost || process.env.SMTP_HOST || '';
+  const user = s?.smtpUser || process.env.SMTP_USER || '';
+  const pass = s?.smtpPass || process.env.SMTP_PASS || '';
+  const port = s?.smtpPort ?? parseInt(process.env.SMTP_PORT || '465', 10);
+  const secure = s?.smtpSecure ?? (process.env.SMTP_SECURE === 'true');
+  const from = s?.smtpFrom || process.env.SMTP_FROM || user;
+  const notificationEmail =
+    s?.notificationEmail || process.env.NOTIFICATION_EMAIL || 'admin@popeventskuwait.com';
+
+  return { host, user, pass, port, secure, from, notificationEmail };
+}
+
+async function getSmtpTransport() {
+  const cfg = await getSmtpConfig();
+  if (!cfg.host || !cfg.user || !cfg.pass) {
+    return null;
+  }
+  const transport = nodemailer.createTransport({
+    host: cfg.host,
+    port: cfg.port,
+    secure: cfg.secure, // true for 465, false for other ports (STARTTLS)
+    auth: { user: cfg.user, pass: cfg.pass },
   });
+  return { transport, cfg };
 }
 
 export async function sendRegistrationNotification(registration: {
@@ -23,31 +56,56 @@ export async function sendRegistrationNotification(registration: {
   email: string;
   phone: string;
   companyName?: string | null;
+  instagram?: string | null;
+  vendorCategory?: string | null;
+  description?: string | null;
+  licenseFileUrl?: string | null;
+  healthCertUrl?: string | null;
+  civilIdUrl?: string | null;
+  businessLogoUrl?: string | null;
   additionalNotes?: string | null;
   event: {
     title: string;
   };
 }) {
-  const transport = getSmtpTransport();
-  if (!transport) {
+  const smtp = await getSmtpTransport();
+  if (!smtp) {
     console.warn('SMTP credentials not set, skipping email notification');
     return;
   }
+  const { transport, cfg } = smtp;
+
+  const docLink = (label: string, url?: string | null) =>
+    url
+      ? `<li><a href="${url}" style="color: #6B21A8;">${label}</a></li>`
+      : `<li style="color: #999;">${label} — not provided</li>`;
+
+  const businessName = registration.companyName || registration.fullName;
 
   try {
     await transport.sendMail({
-      from: `"Pop Events" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
-      to: notificationEmail,
-      subject: `New Registration: ${registration.fullName} - ${registration.event.title}`,
+      from: `"Pop Events" <${cfg.from}>`,
+      to: cfg.notificationEmail,
+      subject: `New Vendor Application: ${businessName} - ${registration.event.title}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #6B21A8;">New Event Registration</h2>
+          <h2 style="color: #6B21A8;">New Vendor Application</h2>
           <p><strong>Event:</strong> ${registration.event.title}</p>
-          <p><strong>Name:</strong> ${registration.fullName}</p>
+          <p><strong>Business Name:</strong> ${businessName}</p>
+          <p><strong>Contact Person:</strong> ${registration.fullName}</p>
           <p><strong>Email:</strong> ${registration.email}</p>
           <p><strong>Phone:</strong> ${registration.phone}</p>
-          ${registration.companyName ? `<p><strong>Company:</strong> ${registration.companyName}</p>` : ''}
+          ${registration.instagram ? `<p><strong>Instagram:</strong> ${registration.instagram}</p>` : ''}
+          ${registration.vendorCategory ? `<p><strong>Category:</strong> ${registration.vendorCategory}</p>` : ''}
+          ${registration.description ? `<p><strong>Description:</strong> ${registration.description}</p>` : ''}
           ${registration.additionalNotes ? `<p><strong>Notes:</strong> ${registration.additionalNotes}</p>` : ''}
+          <p><strong>Documents:</strong></p>
+          <ul>
+            ${docLink('📄 Company License', registration.licenseFileUrl)}
+            ${docLink('📋 Health Certificate', registration.healthCertUrl)}
+            ${docLink('📺 Civil ID', registration.civilIdUrl)}
+            ${docLink('🖼 Business Logo', registration.businessLogoUrl)}
+          </ul>
           <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
           <p style="color: #666; font-size: 14px;">
             <a href="${process.env.NEXTAUTH_URL}/admin/registrations" style="color: #6B21A8;">View in Admin Panel</a>
@@ -67,16 +125,17 @@ export async function sendContactEmail(data: {
   subject: string;
   message: string;
 }) {
-  const transport = getSmtpTransport();
-  if (!transport) {
+  const smtp = await getSmtpTransport();
+  if (!smtp) {
     console.warn('SMTP credentials not set, skipping contact email');
     return;
   }
+  const { transport, cfg } = smtp;
 
   try {
     await transport.sendMail({
-      from: `"Pop Events Contact Form" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
-      to: notificationEmail,
+      from: `"Pop Events Contact Form" <${cfg.from}>`,
+      to: cfg.notificationEmail,
       subject: `Contact Form: ${data.subject}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

@@ -18,7 +18,19 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json(settings);
+    // Never expose SMTP credentials (esp. the password) to the public.
+    const {
+      smtpHost: _h,
+      smtpPort: _po,
+      smtpSecure: _se,
+      smtpUser: _u,
+      smtpPass: _pw,
+      smtpFrom: _f,
+      notificationEmail: _n,
+      ...publicSettings
+    } = settings;
+
+    return NextResponse.json(publicSettings);
   } catch (error) {
     console.error("Error fetching settings:", error);
     return NextResponse.json(
@@ -48,7 +60,9 @@ export async function PUT(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(settings);
+    // Strip the SMTP password from the response even for admins.
+    const { smtpPass: _pw, ...safe } = settings;
+    return NextResponse.json(safe);
   } catch (error) {
     console.error("Error updating settings:", error);
     return NextResponse.json(

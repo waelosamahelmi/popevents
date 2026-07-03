@@ -55,7 +55,13 @@ export async function POST(request: NextRequest) {
       email,
       phone,
       companyName,
+      instagram,
+      vendorCategory,
+      description,
       licenseFileUrl,
+      healthCertUrl,
+      civilIdUrl,
+      businessLogoUrl,
       additionalNotes,
     } = body;
 
@@ -106,7 +112,7 @@ export async function POST(request: NextRequest) {
 
     if (existingRegistration) {
       return NextResponse.json(
-        { error: "You have already registered for this event" },
+        { error: "An application with this email already exists for this event" },
         { status: 409 }
       );
     }
@@ -119,7 +125,13 @@ export async function POST(request: NextRequest) {
         email,
         phone,
         companyName,
+        instagram,
+        vendorCategory,
+        description,
         licenseFileUrl,
+        healthCertUrl,
+        civilIdUrl,
+        businessLogoUrl,
         additionalNotes,
         status: "pending",
       },

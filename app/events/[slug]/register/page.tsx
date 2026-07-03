@@ -55,10 +55,10 @@ export default async function EventRegisterPage({
             </Link>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-glow text-white/70 text-xs uppercase tracking-[0.2em] mb-8 fade-in-down block">
               <ClipboardList size={14} />
-              <span>Registration</span>
+              <span>Vendor Application</span>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-6 fade-in-up">
-              Register for <span className="text-gradient">{event.title}</span>
+              Apply for <span className="text-gradient">{event.title}</span>
             </h1>
             <div className="flex flex-wrap items-center justify-center gap-6 text-white/50 fade-in-up" style={{ animationDelay: "0.1s" }}>
               <div className="flex items-center gap-2">

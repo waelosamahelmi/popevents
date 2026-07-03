@@ -32,11 +32,17 @@ model Registration {
   id              String   @id @default(cuid())
   eventId         String
   event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  fullName        String
+  fullName        String   // contact person
   email           String
   phone           String
-  companyName     String?
-  licenseFileUrl  String?  // uploaded license/permit file URL
+  companyName     String?  // business name
+  instagram       String?  // instagram handle
+  vendorCategory  String?  // vendor category
+  description     String?  @db.Text // brief description of the business
+  licenseFileUrl  String?  // uploaded license/permit file URL (legacy + company license)
+  healthCertUrl   String?  // health certificate document URL
+  civilIdUrl      String?  // civil ID document URL
+  businessLogoUrl String?  // business logo image URL
   additionalNotes String?  @db.Text
   status          String   @default("pending") // pending, approved, rejected
   createdAt       DateTime @default(now())
@@ -73,5 +79,15 @@ model SiteSettings {
   mapEmbedUrl   String?
   logoUrl       String?
   heroImageUrl  String?
+
+  // Email / SMTP notification settings (managed from admin → settings)
+  smtpHost          String?
+  smtpPort          Int?     @default(465)
+  smtpSecure        Boolean  @default(true)
+  smtpUser          String?
+  smtpPass          String?  // SECRET — never expose via the public settings GET
+  smtpFrom          String?
+  notificationEmail String?
+
   updatedAt     DateTime @updatedAt
 }

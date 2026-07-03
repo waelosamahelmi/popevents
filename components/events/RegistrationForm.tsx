@@ -11,6 +11,15 @@ interface RegistrationFormProps {
   eventLocation: string;
 }
 
+const VENDOR_CATEGORIES = [
+  "Food & Beverage",
+  "Coffee & Specialty Drinks",
+  "Retail & Merchandise",
+  "Arts & Crafts",
+  "Services",
+  "Other",
+];
+
 export default function RegistrationForm({
   eventId,
   eventName,
@@ -23,13 +32,21 @@ export default function RegistrationForm({
   const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
-    fullName: "",
+    companyName: "", // Business Name
+    fullName: "", // Contact Person
     email: "",
     phone: "",
-    companyName: "",
-    licenseFileUrl: "",
-    additionalNotes: "",
+    instagram: "",
+    vendorCategory: "",
+    description: "", // Brief Description
+    licenseFileUrl: "", // Company License
+    healthCertUrl: "", // Health Certificate
+    civilIdUrl: "", // Civil ID
+    businessLogoUrl: "", // Business Logo
   });
+
+  const set = (key: keyof typeof formData, value: string) =>
+    setFormData((prev) => ({ ...prev, [key]: value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,21 +57,18 @@ export default function RegistrationForm({
       const response = await fetch("/api/registrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          eventId,
-        }),
+        body: JSON.stringify({ ...formData, eventId }),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Registration failed");
+        throw new Error(data.error || "Application failed");
       }
 
       setSuccess(true);
       setTimeout(() => {
         router.push("/events");
-      }, 3000);
+      }, 4000);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -70,13 +84,18 @@ export default function RegistrationForm({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 className="text-2xl font-bold text-white mb-2">Registration Successful!</h3>
+        <h3 className="text-2xl font-bold text-white mb-2">Application Submitted!</h3>
         <p className="text-white/50">
-          Thank you for registering. We&apos;ll be in touch soon with more details.
+          We will review your application and reach out within 3-5 business days.
         </p>
       </div>
     );
   }
+
+  const inputClass =
+    "w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-white/20 focus:border-white/20 outline-none text-white placeholder-white/30 transition-all duration-300 hover:border-white/20";
+  const labelClass =
+    "block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -88,99 +107,163 @@ export default function RegistrationForm({
 
       {/* Event Summary */}
       <div className="glass-glow rounded-xl p-4 border border-white/10">
-        <h4 className="font-semibold text-white/70 mb-2 text-sm uppercase tracking-wider">You&apos;re registering for:</h4>
+        <h4 className="font-semibold text-white/70 mb-2 text-sm uppercase tracking-wider">
+          You&apos;re applying for:
+        </h4>
         <p className="text-white font-medium">{eventName}</p>
         <p className="text-sm text-white/40">
           {new Date(eventDate).toLocaleDateString()} &bull; {eventLocation}
         </p>
       </div>
 
-      {/* Personal Info */}
+      <p className="text-white/50 text-sm">
+        Fill out all fields below and submit your application.
+      </p>
+
+      {/* Business Info */}
       <div className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
-            Full Name *
-          </label>
-          <input
-            type="text"
-            value={formData.fullName}
-            onChange={(e) => setFormData((prev) => ({ ...prev, fullName: e.target.value }))}
-            required
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-white/20 focus:border-white/20 outline-none text-white placeholder-white/30 transition-all duration-300 hover:border-white/20"
-            placeholder="John Doe"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
-            Email *
-          </label>
-          <input
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-            required
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-white/20 focus:border-white/20 outline-none text-white placeholder-white/30 transition-all duration-300 hover:border-white/20"
-            placeholder="john@example.com"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
-            Phone *
-          </label>
-          <input
-            type="tel"
-            value={formData.phone}
-            onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
-            required
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-white/20 focus:border-white/20 outline-none text-white placeholder-white/30 transition-all duration-300 hover:border-white/20"
-            placeholder="+965 XXXX XXXX"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
-            Company Name
-          </label>
+          <label className={labelClass}>Business Name *</label>
           <input
             type="text"
             value={formData.companyName}
-            onChange={(e) => setFormData((prev) => ({ ...prev, companyName: e.target.value }))}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-white/20 focus:border-white/20 outline-none text-white placeholder-white/30 transition-all duration-300 hover:border-white/20"
-            placeholder="Your company name (optional)"
+            onChange={(e) => set("companyName", e.target.value)}
+            required
+            className={inputClass}
+            placeholder="Your business name"
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Contact Person *</label>
+          <input
+            type="text"
+            value={formData.fullName}
+            onChange={(e) => set("fullName", e.target.value)}
+            required
+            className={inputClass}
+            placeholder="Full name"
+          />
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-5">
+          <div>
+            <label className={labelClass}>Email *</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => set("email", e.target.value)}
+              required
+              className={inputClass}
+              placeholder="you@example.com"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Phone *</label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => set("phone", e.target.value)}
+              required
+              className={inputClass}
+              placeholder="+965 XXXX XXXX"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className={labelClass}>Instagram Handle</label>
+          <input
+            type="text"
+            value={formData.instagram}
+            onChange={(e) => set("instagram", e.target.value)}
+            className={inputClass}
+            placeholder="@yourbusiness"
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Vendor Category *</label>
+          <select
+            value={formData.vendorCategory}
+            onChange={(e) => set("vendorCategory", e.target.value)}
+            required
+            className={`${inputClass} appearance-none`}
+          >
+            <option value="" disabled className="bg-neutral-900">
+              Select a category
+            </option>
+            {VENDOR_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat} className="bg-neutral-900">
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className={labelClass}>Brief Description *</label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => set("description", e.target.value)}
+            required
+            rows={4}
+            className={`${inputClass} resize-y`}
+            placeholder="Tell us about your business and what you'll offer at the event..."
           />
         </div>
       </div>
 
-      {/* License Upload */}
-      <div>
-        <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
-          License / Permit Document
-        </label>
-        <p className="text-sm text-white/30 mb-3">
-          Upload any relevant business licenses or permits (PDF, JPG, PNG)
+      {/* Required Documents */}
+      <div className="pt-2">
+        <h4 className="text-sm font-semibold text-white/70 mb-1 uppercase tracking-wider">
+          Required Documents
+        </h4>
+        <p className="text-xs text-white/30 mb-4">
+          Upload the documents below (PDF, JPG or PNG). All optional — you can send any missing ones later.
         </p>
-        <FileUploader
-          initialFile={formData.licenseFileUrl}
-          onFileChange={(url) => setFormData((prev) => ({ ...prev, licenseFileUrl: url }))}
-          folder="registrations"
-          accept="application/pdf,image/jpeg,image/png"
-        />
-      </div>
 
-      {/* Additional Notes */}
-      <div>
-        <label className="block text-sm font-medium text-white/50 mb-2 uppercase tracking-wider">
-          Additional Notes
-        </label>
-        <textarea
-          value={formData.additionalNotes}
-          onChange={(e) => setFormData((prev) => ({ ...prev, additionalNotes: e.target.value }))}
-          rows={4}
-          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-white/20 focus:border-white/20 outline-none text-white placeholder-white/30 transition-all duration-300 resize-y hover:border-white/20"
-          placeholder="Any additional information or special requirements..."
-        />
+        <div className="space-y-5">
+          <div>
+            <label className={labelClass}>📄 Company License</label>
+            <FileUploader
+              initialFile={formData.licenseFileUrl}
+              onFileChange={(url) => set("licenseFileUrl", url)}
+              folder="registrations"
+              accept="application/pdf,image/jpeg,image/png"
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>📋 Health Certificate</label>
+            <FileUploader
+              initialFile={formData.healthCertUrl}
+              onFileChange={(url) => set("healthCertUrl", url)}
+              folder="registrations"
+              accept="application/pdf,image/jpeg,image/png"
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>📺 Civil ID</label>
+            <FileUploader
+              initialFile={formData.civilIdUrl}
+              onFileChange={(url) => set("civilIdUrl", url)}
+              folder="registrations"
+              accept="application/pdf,image/jpeg,image/png"
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>🖼 Business Logo</label>
+            <FileUploader
+              initialFile={formData.businessLogoUrl}
+              onFileChange={(url) => set("businessLogoUrl", url)}
+              folder="registrations"
+              accept="image/jpeg,image/png,image/webp,image/svg+xml"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Submit */}
@@ -189,11 +272,11 @@ export default function RegistrationForm({
         disabled={loading}
         className="w-full px-6 py-4 bg-white text-black rounded-xl font-semibold hover:bg-white/90 transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(255,255,255,0.15)] disabled:opacity-50 disabled:cursor-not-allowed text-lg"
       >
-        {loading ? "Submitting..." : "Complete Registration"}
+        {loading ? "Submitting..." : "Submit Application"}
       </button>
 
       <p className="text-sm text-white/30 text-center">
-        By submitting this form, you agree to our terms and conditions.
+        We will review your application and reach out within 3-5 business days.
       </p>
     </form>
   );
