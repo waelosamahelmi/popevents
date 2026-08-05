@@ -7,13 +7,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { Lock, Mail, ArrowLeft } from "lucide-react";
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+function getSupabaseBrowserClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) return null;
+  return createBrowserClient(url, anonKey);
+}
 
 export default function LoginPage() {
   const router = useRouter();
+  const supabase = getSupabaseBrowserClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -23,6 +26,12 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    if (!supabase) {
+      setError("Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const { error: authError } = await supabase.auth.signInWithPassword({
