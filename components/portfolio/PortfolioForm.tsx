@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "@/components/shared/ImageUploader";
 import { Plus, X } from "lucide-react";
@@ -18,6 +18,17 @@ interface PortfolioFormProps {
   isEditing?: boolean;
 }
 
+function getFormData(initialData?: PortfolioFormProps["initialData"]) {
+  return {
+    title: initialData?.title || "",
+    description: initialData?.description || "",
+    eventName: initialData?.eventName || "",
+    images: initialData?.images || [],
+    sortOrder: initialData?.sortOrder || 0,
+    isPublished: initialData?.isPublished ?? true,
+  };
+}
+
 export default function PortfolioForm({
   initialData,
   isEditing = false,
@@ -25,15 +36,11 @@ export default function PortfolioForm({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [formData, setFormData] = useState(() => getFormData(initialData));
 
-  const [formData, setFormData] = useState({
-    title: initialData?.title || "",
-    description: initialData?.description || "",
-    eventName: initialData?.eventName || "",
-    images: initialData?.images || [],
-    sortOrder: initialData?.sortOrder || 0,
-    isPublished: initialData?.isPublished ?? true,
-  });
+  useEffect(() => {
+    setFormData(getFormData(initialData));
+  }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
