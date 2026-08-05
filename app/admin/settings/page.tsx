@@ -9,7 +9,7 @@ async function getSettings() {
   return (
     settings || {
       companyName: "Pop Events",
-      tagline: "Your Premier Event Partner in Kuwait",
+      tagline: "Bringing fresh ideas and exciting new events to Kuwait - designed for everyone to enjoy as a family day out.",
       aboutText: "",
       email: "",
       phone: "",

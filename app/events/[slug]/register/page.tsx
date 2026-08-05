@@ -5,6 +5,7 @@ import { ArrowLeft, Calendar as CalendarIcon, MapPin, ClipboardList } from "luci
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import RegistrationForm from "@/components/events/RegistrationForm";
+import VendorTabbedApplicationForm from "@/components/events/VendorTabbedApplicationForm";
 
 export const dynamic = 'force-dynamic';
 
@@ -16,13 +17,21 @@ async function getEvent(slug: string) {
   return event;
 }
 
+async function getApplyEvents() {
+  return prisma.event.findMany({
+    where: { isPublished: true, isUpcoming: true },
+    orderBy: { date: "asc" },
+    select: { id: true, title: true, slug: true, date: true, location: true },
+  });
+}
+
 export default async function EventRegisterPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const event = await getEvent(slug);
+  const [event, applyEvents] = await Promise.all([getEvent(slug), getApplyEvents()]);
 
   if (!event || !event.isPublished) {
     notFound();
@@ -30,6 +39,9 @@ export default async function EventRegisterPage({
 
   const isPast = new Date(event.date) < new Date();
   const isFull = event.maxCapacity && (await prisma.registration.count({ where: { eventId: event.id } })) >= event.maxCapacity;
+  const normalizedTitle = event.title.toLowerCase();
+  const useTabbedVendorForm = normalizedTitle.includes("coffee") || (normalizedTitle.includes("big") && normalizedTitle.includes("fest"));
+  const initialTab = normalizedTitle.includes("coffee") ? "coffee" : "bigFest";
 
   return (
     <>
@@ -125,12 +137,22 @@ export default async function EventRegisterPage({
                   </Link>
                 </div>
               ) : (
-                <RegistrationForm
-                  eventId={event.id}
-                  eventName={event.title}
-                  eventDate={event.date.toISOString()}
-                  eventLocation={event.location}
-                />
+                useTabbedVendorForm ? (
+                  <VendorTabbedApplicationForm
+                    events={applyEvents.map((applyEvent) => ({
+                      ...applyEvent,
+                      date: applyEvent.date.toISOString(),
+                    }))}
+                    initialTab={initialTab}
+                  />
+                ) : (
+                  <RegistrationForm
+                    eventId={event.id}
+                    eventName={event.title}
+                    eventDate={event.date.toISOString()}
+                    eventLocation={event.location}
+                  />
+                )
               )}
             </div>
           </div>

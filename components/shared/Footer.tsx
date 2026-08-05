@@ -35,8 +35,8 @@ export default function Footer({ settings }: FooterProps) {
               />
             </Link>
             <p className="text-white/60 text-sm leading-relaxed">
-              Your premier event partner in Kuwait. Creating unforgettable experiences
-              through innovative festivals, exhibitions, and community events.
+              Bringing fresh ideas and exciting new events to Kuwait, designed
+              for everyone to enjoy as a family day out.
             </p>
           </div>
 

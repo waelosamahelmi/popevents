@@ -67,7 +67,7 @@ model PortfolioItem {
 model SiteSettings {
   id            String  @id @default("main")
   companyName   String  @default("Pop Events")
-  tagline       String? @default("Your Premier Event Partner in Kuwait")
+  tagline       String? @default("Bringing fresh ideas and exciting new events to Kuwait - designed for everyone to enjoy as a family day out.")
   aboutText     String? @db.Text
   email         String?
   phone         String?

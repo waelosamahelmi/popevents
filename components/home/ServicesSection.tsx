@@ -1,38 +1,28 @@
 "use client";
 
-import { Palette, Users, Mic, Camera, Globe, Gift, ChevronLeft, ChevronRight } from "lucide-react";
+import { ClipboardList, Zap, Armchair, Flag, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState, useCallback } from "react";
 
 const services = [
   {
-    icon: Palette,
-    title: "Event Design",
-    description: "Bespoke event concepts that bring your vision to life with stunning aesthetics.",
+    icon: ClipboardList,
+    title: "Event Licensing",
+    description: "Complete licensing support so your event is approved and ready to launch.",
   },
   {
-    icon: Users,
-    title: "Guest Management",
-    description: "Seamless registration, check-in, and attendee engagement solutions.",
+    icon: Zap,
+    title: "Power & Electricity",
+    description: "Reliable electrical planning and distribution for smooth event operations.",
   },
   {
-    icon: Mic,
-    title: "Entertainment",
-    description: "Top-tier performers, DJs, and entertainment acts for every occasion.",
+    icon: Armchair,
+    title: "Seating & Setup",
+    description: "Professional infrastructure and seating layouts tailored to your audience.",
   },
   {
-    icon: Camera,
-    title: "Coverage",
-    description: "Professional photography and videography to capture every moment.",
-  },
-  {
-    icon: Globe,
-    title: "Exhibitions",
-    description: "Large-scale exhibitions and trade shows with global reach.",
-  },
-  {
-    icon: Gift,
-    title: "Brand Activations",
-    description: "Creative brand experiences that leave lasting impressions.",
+    icon: Flag,
+    title: "Based in Kuwait",
+    description: "Local expertise and on-ground execution across Kuwait City and beyond.",
   },
 ];
 
@@ -111,14 +101,14 @@ export default function ServicesSection() {
         {/* Header */}
         <div className={`text-center mb-16 px-4 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-glow text-white/70 text-xs uppercase tracking-[0.2em] mb-6">
-            <Palette size={14} />
-            <span>What We Do</span>
+            <ClipboardList size={14} />
+            <span>What We Handle</span>
           </div>
           <h2 className="text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-6">
-            Our <span className="text-gradient">Services</span>
+            Event <span className="text-gradient">Operations</span>
           </h2>
           <p className="text-white/40 text-lg max-w-2xl mx-auto leading-relaxed">
-            From concept to execution, we deliver world-class event experiences.
+            End-to-end operational support built for events in Kuwait.
           </p>
         </div>
 

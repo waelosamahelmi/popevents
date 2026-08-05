@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
-import { Mail, Phone, MapPin, Send, Instagram, Twitter, MessageCircle } from "lucide-react";
+import { Mail, Phone, MapPin, Send, MessageCircle } from "lucide-react";
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
@@ -65,7 +65,7 @@ export default function ContactPage() {
               Get in <span className="text-gradient">Touch</span>
             </h1>
             <p className="text-xl text-white/50 max-w-2xl mx-auto fade-in-up leading-relaxed" style={{ animationDelay: "0.1s" }}>
-              Have a question or want to work together? We&apos;d love to hear from you.
+              Have an event idea or need operational support in Kuwait? We&apos;d love to hear from you.
             </p>
             <div className="w-24 h-[2px] bg-gradient-to-r from-transparent via-white/30 to-transparent mx-auto mt-8 fade-in" style={{ animationDelay: "0.2s" }}></div>
           </div>
@@ -190,7 +190,7 @@ export default function ContactPage() {
                     </a>
 
                     <a
-                      href="tel:+96512345678"
+                      href="tel:+96599839299"
                       className="flex items-start gap-4 p-4 rounded-2xl hover:bg-white/5 transition-all duration-300 group"
                     >
                       <div className="w-12 h-12 glass-glow rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
@@ -199,7 +199,7 @@ export default function ContactPage() {
                       <div>
                         <p className="font-medium text-white">Phone</p>
                         <p className="text-white/40 group-hover:text-white/70 transition-colors duration-300">
-                          +965 1234 5678
+                          +965 9983 9299 / +965 9444 2746
                         </p>
                       </div>
                     </a>
@@ -215,34 +215,6 @@ export default function ContactPage() {
                         </p>
                       </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* Social Links */}
-                <div className="glass-card rounded-3xl p-8 border border-white/5 fade-in-up" style={{ animationDelay: "0.2s" }}>
-                  <h2 className="text-xl font-bold text-white mb-3">Follow Us</h2>
-                  <p className="text-white/40 mb-6">
-                    Stay updated with our latest events and announcements
-                  </p>
-                  <div className="flex gap-4">
-                    <a
-                      href="https://instagram.com/popevents"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 px-4 py-3 glass-glow rounded-xl font-medium text-white hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 hover:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
-                    >
-                      <Instagram size={20} />
-                      Instagram
-                    </a>
-                    <a
-                      href="https://twitter.com/popevents"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 px-4 py-3 glass-glow rounded-xl font-medium text-white hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 hover:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
-                    >
-                      <Twitter size={20} />
-                      Twitter
-                    </a>
                   </div>
                 </div>
               </div>

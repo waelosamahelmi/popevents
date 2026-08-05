@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Play } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface HeroSectionProps {
   companyName?: string | null;
@@ -12,22 +12,86 @@ interface HeroSectionProps {
 
 export default function HeroSection({ companyName, tagline }: HeroSectionProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const tryPlayVideo = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    try {
+      await video.play();
+      setVideoReady(true);
+    } catch {
+      // iOS may block autoplay in low power mode or strict policy contexts.
+      setVideoFailed(true);
+    }
+  };
 
   useEffect(() => {
     setIsVisible(true);
+
+    // Retry playback after mount and when the tab resumes.
+    void tryPlayVideo();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void tryPlayVideo();
+      }
+    };
+
+    const onFirstInteraction = () => {
+      void tryPlayVideo();
+      window.removeEventListener("touchstart", onFirstInteraction);
+      window.removeEventListener("click", onFirstInteraction);
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("pageshow", onVisibilityChange);
+    window.addEventListener("touchstart", onFirstInteraction, { passive: true });
+    window.addEventListener("click", onFirstInteraction);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pageshow", onVisibilityChange);
+      window.removeEventListener("touchstart", onFirstInteraction);
+      window.removeEventListener("click", onFirstInteraction);
+    };
   }, []);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Video Background */}
       <div className="absolute inset-0 z-0">
+        {/* Always render poster image so iOS/autoplay failures still look intentional */}
+        <Image
+          src="/hero-poster.jpg"
+          alt="Pop Events hero background"
+          fill
+          priority
+          className="object-cover scale-[1.02]"
+        />
+
         <video
+          ref={videoRef}
           autoPlay
           muted
           loop
           playsInline
-          className="absolute inset-0 w-full h-full object-cover"
+          preload="auto"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${videoReady && !videoFailed ? "opacity-100" : "opacity-0"}`}
           poster="/hero-poster.jpg"
+          onCanPlay={() => {
+            setVideoReady(true);
+            setVideoFailed(false);
+            void tryPlayVideo();
+          }}
+          onPlaying={() => {
+            setVideoReady(true);
+            setVideoFailed(false);
+          }}
+          onError={() => setVideoFailed(true)}
+          onStalled={() => setVideoFailed(true)}
         >
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
@@ -79,7 +143,7 @@ export default function HeroSection({ companyName, tagline }: HeroSectionProps) 
         {/* Tagline */}
         <div className={`transition-all duration-1000 delay-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <p className="text-xl sm:text-2xl md:text-4xl text-white/70 mb-4 max-w-4xl mx-auto leading-relaxed font-light tracking-wide">
-            {tagline || "Your Premier Event Partner in Kuwait"}
+            {"Bringing fresh ideas and exciting new events to Kuwait — designed for everyone to enjoy as a family day out."}
           </p>
           <div className="w-24 h-[2px] bg-gradient-to-r from-transparent via-white/40 to-transparent mx-auto mt-6 mb-6"></div>
         </div>
@@ -108,28 +172,32 @@ export default function HeroSection({ companyName, tagline }: HeroSectionProps) 
           </Link>
         </div>
 
-        {/* Stats with animated counters */}
+        {/* Operations highlights */}
         <div className={`mt-10 transition-all duration-1000 delay-[1100ms] ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="grid grid-cols-3 gap-8 max-w-3xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
             <div className="text-center group cursor-default">
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2 transition-transform duration-300 group-hover:scale-110">
-                50<span className="text-amber-400">+</span>
+              <div className="text-white font-semibold mb-2 transition-transform duration-300 group-hover:scale-105">
+                Event Licensing
               </div>
-              <div className="text-white/40 text-sm uppercase tracking-widest">Events</div>
-            </div>
-            <div className="text-center group cursor-default relative">
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-12 bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2 transition-transform duration-300 group-hover:scale-110">
-                100K<span className="text-amber-400">+</span>
-              </div>
-              <div className="text-white/40 text-sm uppercase tracking-widest">Attendees</div>
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-12 bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
+              <div className="text-white/40 text-xs uppercase tracking-widest">Operations</div>
             </div>
             <div className="text-center group cursor-default">
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2 transition-transform duration-300 group-hover:scale-110">
-                200<span className="text-amber-400">+</span>
+              <div className="text-white font-semibold mb-2 transition-transform duration-300 group-hover:scale-105">
+                Power & Electricity
               </div>
-              <div className="text-white/40 text-sm uppercase tracking-widest">Exhibitors</div>
+              <div className="text-white/40 text-xs uppercase tracking-widest">Infrastructure</div>
+            </div>
+            <div className="text-center group cursor-default">
+              <div className="text-white font-semibold mb-2 transition-transform duration-300 group-hover:scale-105">
+                Seating & Setup
+              </div>
+              <div className="text-white/40 text-xs uppercase tracking-widest">Execution</div>
+            </div>
+            <div className="text-center group cursor-default">
+              <div className="text-white font-semibold mb-2 transition-transform duration-300 group-hover:scale-105">
+                Based in Kuwait
+              </div>
+              <div className="text-white/40 text-xs uppercase tracking-widest">Local Team</div>
             </div>
           </div>
         </div>

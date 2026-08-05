@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "Pop Events Kuwait - Premier Event Management",
-  description: "Your Premier Event Partner in Kuwait. Organizing festivals, exhibitions, and community events including the Coffee Festival and more.",
+  description: "Bringing fresh ideas and exciting new events to Kuwait, designed for everyone to enjoy as a family day out.",
   keywords: ["events", "Kuwait", "festival", "coffee", "exhibition", "community"],
 };
 
