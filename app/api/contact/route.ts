@@ -1,22 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendContactEmail } from "@/lib/email";
+import { validateContactPayload } from "@/lib/form-validation";
 
 // POST /api/contact - Send contact form email (public)
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { name, email, subject, message } = body;
-
-    // Validate required fields
-    if (!name || !email || !subject || !message) {
+    const validation = validateContactPayload(await request.json());
+    if ("error" in validation) {
       return NextResponse.json(
-        { error: "All fields are required" },
+        { error: validation.error },
         { status: 400 }
       );
     }
-
-    // Send email
-    await sendContactEmail({ name, email, subject, message });
+    await sendContactEmail(validation.value);
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -153,3 +153,19 @@ export async function sendContactEmail(data: {
     throw new Error('Failed to send contact email');
   }
 }
+
+export async function sendVendorApplicationNotification(application: {
+  event: string; businessName: string; contactPerson: string; email: string; phone: string;
+  category: string; description: string; instagram: string;
+  attachments: Array<{ filename: string; content: Buffer; contentType: string }>;
+}) {
+  const smtp = await getSmtpTransport();
+  if (!smtp) { console.warn('SMTP credentials not set, skipping vendor notification'); return; }
+  const { transport, cfg } = smtp;
+  await transport.sendMail({
+    from: `"Pop Events" <${cfg.from}>`, to: cfg.notificationEmail,
+    subject: `New Vendor Application: ${application.businessName} - ${application.event}`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto"><h2>New Vendor Application</h2><p><b>Event:</b> ${application.event}</p><p><b>Business:</b> ${application.businessName}</p><p><b>Contact:</b> ${application.contactPerson}</p><p><b>Email:</b> ${application.email}</p><p><b>Phone:</b> ${application.phone}</p><p><b>Instagram:</b> ${application.instagram || '—'}</p><p><b>Category:</b> ${application.category}</p><p><b>Description:</b> ${application.description}</p><p>The company license, health certificate, Civil ID, and business logo are attached to this email.</p></div>`,
+    attachments: application.attachments,
+  });
+}
