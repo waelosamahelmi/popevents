@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "@/components/shared/ImageUploader";
 
@@ -22,12 +22,8 @@ interface EventFormProps {
   isEditing?: boolean;
 }
 
-export default function EventForm({ initialData, isEditing = false }: EventFormProps) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const [formData, setFormData] = useState({
+function getFormData(initialData?: EventFormProps["initialData"]) {
+  return {
     title: initialData?.title || "",
     slug: initialData?.slug || "",
     description: initialData?.description || "",
@@ -39,7 +35,18 @@ export default function EventForm({ initialData, isEditing = false }: EventFormP
     isUpcoming: initialData?.isUpcoming ?? true,
     isPublished: initialData?.isPublished ?? true,
     maxCapacity: initialData?.maxCapacity || "",
-  });
+  };
+}
+
+export default function EventForm({ initialData, isEditing = false }: EventFormProps) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState(() => getFormData(initialData));
+
+  useEffect(() => {
+    setFormData(getFormData(initialData));
+  }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
