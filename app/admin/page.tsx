@@ -5,8 +5,24 @@ import Link from "next/link";
 export const dynamic = 'force-dynamic';
 
 async function getStats() {
-  const [totalEvents, upcomingEvents, totalRegistrations, pendingRegistrations, recentRegistrations] =
-    await Promise.all([
+  if (!process.env.DATABASE_URL) {
+    return {
+      totalEvents: 0,
+      upcomingEvents: 0,
+      totalRegistrations: 0,
+      pendingRegistrations: 0,
+      recentRegistrations: [],
+    };
+  }
+
+  try {
+    const [
+      totalEvents,
+      upcomingEvents,
+      totalRegistrations,
+      pendingRegistrations,
+      recentRegistrations,
+    ] = await Promise.all([
       prisma.event.count(),
       prisma.event.count({ where: { isUpcoming: true } }),
       prisma.registration.count(),
@@ -22,13 +38,23 @@ async function getStats() {
       }),
     ]);
 
-  return {
-    totalEvents,
-    upcomingEvents,
-    totalRegistrations,
-    pendingRegistrations,
-    recentRegistrations,
-  };
+    return {
+      totalEvents,
+      upcomingEvents,
+      totalRegistrations,
+      pendingRegistrations,
+      recentRegistrations,
+    };
+  } catch (error) {
+    console.error("Admin dashboard data fetch failed:", error);
+    return {
+      totalEvents: 0,
+      upcomingEvents: 0,
+      totalRegistrations: 0,
+      pendingRegistrations: 0,
+      recentRegistrations: [],
+    };
+  }
 }
 
 export default async function AdminDashboard() {
