@@ -7,11 +7,20 @@ import VendorTabbedApplicationForm from "@/components/events/VendorTabbedApplica
 export const dynamic = "force-dynamic";
 
 async function getEvents() {
-  return prisma.event.findMany({
-    where: { isPublished: true, isUpcoming: true },
-    orderBy: { date: "asc" },
-    select: { id: true, title: true, slug: true, date: true, location: true },
-  });
+  if (!process.env.DATABASE_URL) {
+    return [];
+  }
+
+  try {
+    return await prisma.event.findMany({
+      where: { isPublished: true, isUpcoming: true },
+      orderBy: { date: "asc" },
+      select: { id: true, title: true, slug: true, date: true, location: true },
+    });
+  } catch (error) {
+    console.error("Apply page data fetch failed:", error);
+    return [];
+  }
 }
 
 export default async function ApplyPage() {

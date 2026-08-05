@@ -6,10 +6,19 @@ import PortfolioGallery from "@/components/portfolio/PortfolioGallery";
 export const dynamic = 'force-dynamic';
 
 async function getPortfolio() {
-  return prisma.portfolioItem.findMany({
-    where: { isPublished: true },
-    orderBy: { sortOrder: "asc" },
-  });
+  if (!process.env.DATABASE_URL) {
+    return [];
+  }
+
+  try {
+    return await prisma.portfolioItem.findMany({
+      where: { isPublished: true },
+      orderBy: { sortOrder: "asc" },
+    });
+  } catch (error) {
+    console.error("Portfolio page data fetch failed:", error);
+    return [];
+  }
 }
 
 export default async function PortfolioPage() {

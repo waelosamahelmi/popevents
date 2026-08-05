@@ -10,23 +10,32 @@ import CTASection from "@/components/home/CTASection";
 export const dynamic = 'force-dynamic';
 
 async function getHomePageData() {
-  const [upcomingEvents, portfolioItems, settings] = await Promise.all([
-    prisma.event.findMany({
-      where: { isUpcoming: true, isPublished: true },
-      orderBy: { date: "asc" },
-      take: 3,
-    }),
-    prisma.portfolioItem.findMany({
-      where: { isPublished: true },
-      orderBy: { sortOrder: "asc" },
-      take: 6,
-    }),
-    prisma.siteSettings.findUnique({
-      where: { id: "main" },
-    }),
-  ]);
+  if (!process.env.DATABASE_URL) {
+    return { upcomingEvents: [], portfolioItems: [], settings: null };
+  }
 
-  return { upcomingEvents, portfolioItems, settings };
+  try {
+    const [upcomingEvents, portfolioItems, settings] = await Promise.all([
+      prisma.event.findMany({
+        where: { isUpcoming: true, isPublished: true },
+        orderBy: { date: "asc" },
+        take: 3,
+      }),
+      prisma.portfolioItem.findMany({
+        where: { isPublished: true },
+        orderBy: { sortOrder: "asc" },
+        take: 6,
+      }),
+      prisma.siteSettings.findUnique({
+        where: { id: "main" },
+      }),
+    ]);
+
+    return { upcomingEvents, portfolioItems, settings };
+  } catch (error) {
+    console.error("Home page data fetch failed:", error);
+    return { upcomingEvents: [], portfolioItems: [], settings: null };
+  }
 }
 
 export default async function HomePage() {

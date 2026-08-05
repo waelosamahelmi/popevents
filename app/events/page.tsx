@@ -7,18 +7,27 @@ import { Calendar, Clock } from "lucide-react";
 export const dynamic = 'force-dynamic';
 
 async function getEvents() {
-  const [upcomingEvents, pastEvents] = await Promise.all([
-    prisma.event.findMany({
-      where: { isUpcoming: true, isPublished: true },
-      orderBy: { date: "asc" },
-    }),
-    prisma.event.findMany({
-      where: { isUpcoming: false, isPublished: true },
-      orderBy: { date: "desc" },
-    }),
-  ]);
+  if (!process.env.DATABASE_URL) {
+    return { upcomingEvents: [], pastEvents: [] };
+  }
 
-  return { upcomingEvents, pastEvents };
+  try {
+    const [upcomingEvents, pastEvents] = await Promise.all([
+      prisma.event.findMany({
+        where: { isUpcoming: true, isPublished: true },
+        orderBy: { date: "asc" },
+      }),
+      prisma.event.findMany({
+        where: { isUpcoming: false, isPublished: true },
+        orderBy: { date: "desc" },
+      }),
+    ]);
+
+    return { upcomingEvents, pastEvents };
+  } catch (error) {
+    console.error("Events page data fetch failed:", error);
+    return { upcomingEvents: [], pastEvents: [] };
+  }
 }
 
 export default async function EventsPage() {
