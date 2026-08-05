@@ -36,13 +36,13 @@ export default function HomePage() {
         <section id="contact" className="pop-light-two contact-section">
           <div className="pop-inner contact-grid"><div><span className="pop-kicker">Contact</span><h2 className="pop-title">Get in Touch</h2>
             <p className="pop-copy contact-copy">Have an event idea or need operational support in Kuwait? We&apos;d love to hear from you.</p>
-            <div className="contact-items"><div className="contact-item"><span className="contact-icon">📧</span><a href="mailto:info@popeventskw.com">info@popeventskw.com</a></div>
+            <div className="contact-items"><div className="contact-item"><span className="contact-icon">📧</span><a href="mailto:info@popeventskuwait.com">info@popeventskuwait.com</a></div>
               <div className="contact-item"><span className="contact-icon">📍</span><span>Kuwait City, Kuwait</span></div>
               <div className="contact-item"><span className="contact-icon">📱</span><span>+965 9983 9299 / +965 9444 2746</span></div></div>
           </div><ContactForm /></div>
         </section>
       </main>
-      <footer className="pop-footer"><strong>POP EVENTS</strong><p>© 2026 Pop Events Kuwait</p><a href="mailto:info@popeventskw.com">info@popeventskw.com</a></footer>
+      <footer className="pop-footer"><strong>POP EVENTS</strong><p>© 2026 Pop Events Kuwait</p><a href="mailto:info@popeventskuwait.com">info@popeventskuwait.com</a></footer>
     </>
   );
 }
