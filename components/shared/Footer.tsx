@@ -15,6 +15,9 @@ interface FooterProps {
 
 export default function Footer({ settings }: FooterProps) {
   const currentYear = new Date().getFullYear();
+  const contactEmail = settings?.email?.trim() || "info@popeventskuwait.com";
+  const contactPhone = settings?.phone?.trim() || "+965 9983 9299 / +965 9444 2746";
+  const contactAddress = settings?.address?.trim() || "Kuwait City, Kuwait";
 
   return (
     <footer className="relative border-t border-white/10">
@@ -83,36 +86,29 @@ export default function Footer({ settings }: FooterProps) {
           <div>
             <h4 className="text-white font-semibold mb-4">Contact</h4>
             <ul className="space-y-3">
-              {settings?.email && (
-                <li className="flex items-start gap-3">
-                  <Mail size={16} className="text-white/40 mt-0.5 flex-shrink-0" />
-                  <a
-                    href={`mailto:${settings.email}`}
-                    className="text-white/60 hover:text-white text-sm transition-colors duration-300"
-                  >
-                    {settings.email}
-                  </a>
-                </li>
-              )}
-              {settings?.phone && (
-                <li className="flex items-start gap-3">
-                  <Phone size={16} className="text-white/40 mt-0.5 flex-shrink-0" />
-                  <a
-                    href={`tel:${settings.phone}`}
-                    className="text-white/60 hover:text-white text-sm transition-colors duration-300"
-                  >
-                    {settings.phone}
-                  </a>
-                </li>
-              )}
-              {settings?.address && (
-                <li className="flex items-start gap-3">
-                  <MapPin size={16} className="text-white/40 mt-0.5 flex-shrink-0" />
-                  <span className="text-white/60 text-sm">
-                    {settings.address}
-                  </span>
-                </li>
-              )}
+              <li className="flex items-start gap-3">
+                <Mail size={16} className="text-white/40 mt-0.5 flex-shrink-0" />
+                <a
+                  href={`mailto:${contactEmail}`}
+                  className="text-white/60 hover:text-white text-sm transition-colors duration-300"
+                >
+                  {contactEmail}
+                </a>
+              </li>
+
+              <li className="flex items-start gap-3">
+                <Phone size={16} className="text-white/40 mt-0.5 flex-shrink-0" />
+                <span className="text-white/60 text-sm">
+                  {contactPhone}
+                </span>
+              </li>
+
+              <li className="flex items-start gap-3">
+                <MapPin size={16} className="text-white/40 mt-0.5 flex-shrink-0" />
+                <span className="text-white/60 text-sm">
+                  {contactAddress}
+                </span>
+              </li>
             </ul>
           </div>
 
