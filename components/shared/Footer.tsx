@@ -1,9 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, Phone, MapPin, Instagram, Twitter, Facebook } from "lucide-react";
+import { Mail, Phone, MapPin, Instagram, Twitter, Music2 } from "lucide-react";
 
 interface FooterProps {
   settings?: {
+    companyName?: string | null;
     email?: string | null;
     phone?: string | null;
     address?: string | null;
@@ -15,6 +16,7 @@ interface FooterProps {
 
 export default function Footer({ settings }: FooterProps) {
   const currentYear = new Date().getFullYear();
+  const companyName = settings?.companyName?.trim() || "Pop Events";
   const contactEmail = settings?.email?.trim() || "info@popeventskuwait.com";
   const contactPhone = settings?.phone?.trim() || "+965 9983 9299 / +965 9444 2746";
   const contactAddress = settings?.address?.trim() || "Kuwait City, Kuwait";
@@ -138,6 +140,17 @@ export default function Footer({ settings }: FooterProps) {
                   <Twitter size={18} />
                 </a>
               )}
+              {settings?.tiktok && (
+                <a
+                  href={settings.tiktok}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full glass flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all duration-300"
+                  aria-label="TikTok"
+                >
+                  <Music2 size={18} />
+                </a>
+              )}
               <a
                 href="/contact"
                 className="w-10 h-10 rounded-full glass flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all duration-300"
@@ -153,7 +166,7 @@ export default function Footer({ settings }: FooterProps) {
         <div className="mt-12 pt-8 border-t border-white/10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-white/40 text-sm">
-              © {currentYear} Pop Events Kuwait. All rights reserved.
+              © {currentYear} {companyName}. All rights reserved.
             </p>
           </div>
         </div>

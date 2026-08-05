@@ -3,6 +3,7 @@ import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import EventCard from "@/components/events/EventCard";
 import { Calendar, Clock } from "lucide-react";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,10 @@ async function getEvents() {
 }
 
 export default async function EventsPage() {
-  const { upcomingEvents, pastEvents } = await getEvents();
+  const [{ upcomingEvents, pastEvents }, settings] = await Promise.all([
+    getEvents(),
+    getSiteSettings(),
+  ]);
 
   return (
     <>
@@ -124,7 +128,7 @@ export default async function EventsPage() {
         )}
       </main>
 
-      <Footer />
+      <Footer settings={settings} />
     </>
   );
 }

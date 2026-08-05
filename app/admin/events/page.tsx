@@ -5,14 +5,23 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 export const dynamic = 'force-dynamic';
 
 async function getEvents() {
-  return prisma.event.findMany({
-    include: {
-      _count: {
-        select: { registrations: true },
+  if (!process.env.DATABASE_URL) {
+    return [];
+  }
+
+  try {
+    return await prisma.event.findMany({
+      include: {
+        _count: {
+          select: { registrations: true },
+        },
       },
-    },
-    orderBy: { date: "desc" },
-  });
+      orderBy: { date: "desc" },
+    });
+  } catch (error) {
+    console.error("Admin events fetch failed:", error);
+    return [];
+  }
 }
 
 export default async function AdminEventsPage() {

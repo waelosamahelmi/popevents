@@ -4,18 +4,27 @@ import Link from "next/link";
 import { Eye, MoreHorizontal } from "lucide-react";
 
 async function getRegistrations() {
-  return prisma.registration.findMany({
-    include: {
-      event: {
-        select: {
-          id: true,
-          title: true,
-          date: true,
+  if (!process.env.DATABASE_URL) {
+    return [];
+  }
+
+  try {
+    return await prisma.registration.findMany({
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            date: true,
+          },
         },
       },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    console.error("Admin registrations fetch failed:", error);
+    return [];
+  }
 }
 
 export default async function AdminRegistrationsPage() {

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import PortfolioGallery from "@/components/portfolio/PortfolioGallery";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,7 @@ async function getPortfolio() {
 }
 
 export default async function PortfolioPage() {
-  const items = await getPortfolio();
+  const [items, settings] = await Promise.all([getPortfolio(), getSiteSettings()]);
 
   // Serialize dates for client component
   const serializedItems = items.map((item) => ({
@@ -64,7 +65,7 @@ export default async function PortfolioPage() {
         <PortfolioGallery items={serializedItems} />
       </main>
 
-      <Footer />
+      <Footer settings={settings} />
     </>
   );
 }

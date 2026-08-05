@@ -6,6 +6,7 @@ import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import RegistrationForm from "@/components/events/RegistrationForm";
 import VendorTabbedApplicationForm from "@/components/events/VendorTabbedApplicationForm";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,11 @@ export default async function EventRegisterPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [event, applyEvents] = await Promise.all([getEvent(slug), getApplyEvents()]);
+  const [event, applyEvents, settings] = await Promise.all([
+    getEvent(slug),
+    getApplyEvents(),
+    getSiteSettings(),
+  ]);
 
   if (!event || !event.isPublished) {
     notFound();
@@ -159,7 +164,7 @@ export default async function EventRegisterPage({
         </section>
       </main>
 
-      <Footer />
+      <Footer settings={settings} />
     </>
   );
 }

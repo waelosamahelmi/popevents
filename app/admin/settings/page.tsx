@@ -1,33 +1,42 @@
 export const dynamic = 'force-dynamic';
 import { prisma } from "@/lib/prisma";
 
-async function getSettings() {
-  const settings = await prisma.siteSettings.findUnique({
-    where: { id: "main" },
-  });
+const defaultSettings = {
+  companyName: "Pop Events",
+  tagline: "Bringing fresh ideas and exciting new events to Kuwait - designed for everyone to enjoy as a family day out.",
+  aboutText: "",
+  email: "",
+  phone: "",
+  whatsapp: "",
+  instagram: "",
+  tiktok: "",
+  twitter: "",
+  address: "",
+  mapEmbedUrl: "",
+  smtpHost: "",
+  smtpPort: 465,
+  smtpSecure: true,
+  smtpUser: "",
+  smtpPass: "",
+  smtpFrom: "",
+  notificationEmail: "",
+};
 
-  return (
-    settings || {
-      companyName: "Pop Events",
-      tagline: "Bringing fresh ideas and exciting new events to Kuwait - designed for everyone to enjoy as a family day out.",
-      aboutText: "",
-      email: "",
-      phone: "",
-      whatsapp: "",
-      instagram: "",
-      tiktok: "",
-      twitter: "",
-      address: "",
-      mapEmbedUrl: "",
-      smtpHost: "",
-      smtpPort: 465,
-      smtpSecure: true,
-      smtpUser: "",
-      smtpPass: "",
-      smtpFrom: "",
-      notificationEmail: "",
-    }
-  );
+async function getSettings() {
+  if (!process.env.DATABASE_URL) {
+    return defaultSettings;
+  }
+
+  try {
+    const settings = await prisma.siteSettings.findUnique({
+      where: { id: "main" },
+    });
+
+    return settings || defaultSettings;
+  } catch (error) {
+    console.error("Admin settings fetch failed:", error);
+    return defaultSettings;
+  }
 }
 
 export default async function AdminSettingsPage() {

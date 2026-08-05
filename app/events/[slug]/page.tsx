@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MapPin, Calendar as CalendarIcon, ArrowLeft, ArrowRight, Clock } from "lucide-react";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,7 @@ export default async function EventDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const event = await getEvent(slug);
+  const [event, settings] = await Promise.all([getEvent(slug), getSiteSettings()]);
 
   if (!event || !event.isPublished) {
     notFound();
@@ -187,7 +188,7 @@ export default async function EventDetailPage({
         </section>
       </main>
 
-      <Footer />
+      <Footer settings={settings} />
     </>
   );
 }

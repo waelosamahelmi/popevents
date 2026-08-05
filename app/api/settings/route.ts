@@ -1,36 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/supabase-auth";
 import { prisma } from "@/lib/prisma";
+import { getSiteSettings } from "@/lib/site-settings";
 
 // GET /api/settings - Get site settings (public)
 export async function GET() {
   try {
-    const settings = await prisma.siteSettings.findUnique({
-      where: { id: "main" },
-    });
-
-    if (!settings) {
-      // Return default settings if none exist
-      return NextResponse.json({
-        id: "main",
-        companyName: "Pop Events",
-        tagline: "Bringing fresh ideas and exciting new events to Kuwait - designed for everyone to enjoy as a family day out.",
-      });
-    }
-
-    // Never expose SMTP credentials (esp. the password) to the public.
-    const {
-      smtpHost: _h,
-      smtpPort: _po,
-      smtpSecure: _se,
-      smtpUser: _u,
-      smtpPass: _pw,
-      smtpFrom: _f,
-      notificationEmail: _n,
-      ...publicSettings
-    } = settings;
-
-    return NextResponse.json(publicSettings);
+    const settings = await getSiteSettings();
+    return NextResponse.json(settings);
   } catch (error) {
     console.error("Error fetching settings:", error);
     return NextResponse.json(

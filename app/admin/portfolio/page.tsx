@@ -4,9 +4,18 @@ import Link from "next/link";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 
 async function getPortfolio() {
-  return prisma.portfolioItem.findMany({
-    orderBy: { sortOrder: "asc" },
-  });
+  if (!process.env.DATABASE_URL) {
+    return [];
+  }
+
+  try {
+    return await prisma.portfolioItem.findMany({
+      orderBy: { sortOrder: "asc" },
+    });
+  } catch (error) {
+    console.error("Admin portfolio fetch failed:", error);
+    return [];
+  }
 }
 
 export default async function AdminPortfolioPage() {

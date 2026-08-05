@@ -3,6 +3,7 @@ import { Store } from "lucide-react";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import VendorTabbedApplicationForm from "@/components/events/VendorTabbedApplicationForm";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,7 @@ async function getEvents() {
 }
 
 export default async function ApplyPage() {
-  const events = await getEvents();
+  const [events, settings] = await Promise.all([getEvents(), getSiteSettings()]);
 
   return (
     <>
@@ -71,7 +72,7 @@ export default async function ApplyPage() {
         </section>
       </main>
 
-      <Footer />
+      <Footer settings={settings} />
     </>
   );
 }

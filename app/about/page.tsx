@@ -2,10 +2,13 @@ import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import Link from "next/link";
 import { Info, ArrowRight } from "lucide-react";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = 'force-dynamic';
 
 export default async function AboutPage() {
+  const settings = await getSiteSettings();
+
   return (
     <>
       <Navbar />
@@ -47,7 +50,7 @@ export default async function AboutPage() {
                 We Make Events Happen in Kuwait
               </h2>
               <p className="text-white/70 whitespace-pre-wrap text-lg leading-relaxed">
-                Pop Events was set up to bring new ideas and events to Kuwait that everyone can enjoy as a family. We handle everything behind the scenes - from securing your licenses to setting up power, seating, and full event infrastructure - so you can focus on the experience.
+                {settings.aboutText || "Pop Events was set up to bring new ideas and events to Kuwait that everyone can enjoy as a family. We handle everything behind the scenes - from securing your licenses to setting up power, seating, and full event infrastructure - so you can focus on the experience."}
               </p>
             </div>
 
@@ -59,7 +62,7 @@ export default async function AboutPage() {
                 Join Our Network
               </h3>
               <p className="text-white/70 text-lg leading-relaxed mb-8">
-                Register your business, upload your trade license and documents, and become part of the Pop Events vendor family.
+                Register your business, upload your trade license and documents, and become part of the {settings.companyName} vendor family.
               </p>
               <Link
                 href="/apply"
@@ -73,7 +76,7 @@ export default async function AboutPage() {
         </section>
       </main>
 
-      <Footer />
+      <Footer settings={settings} />
     </>
   );
 }
