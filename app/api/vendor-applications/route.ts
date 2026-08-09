@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateVendorFields, validateVendorFile } from "@/lib/form-validation";
-import { sendVendorApplicationNotification } from "@/lib/email";
+import { sendRegistrationNotification } from "@/lib/email";
+import { prisma } from "@/lib/prisma";
+import { uploadRegistrationFile } from "@/lib/upload";
 
 const fileNames = ["companyLicense", "healthCertificate", "civilId", "businessLogo"] as const;
 
@@ -16,11 +18,38 @@ export async function POST(request: NextRequest) {
       const fileError = validateVendorFile(file);
       if (fileError) return NextResponse.json({ error: fileError }, { status: 400 });
     }
-    const attachments = await Promise.all(fileNames.map(async (name) => {
-      const file = files[name] as File;
-      return { filename: file.name, content: Buffer.from(await file.arrayBuffer()), contentType: file.type };
-    }));
-    await sendVendorApplicationNotification({ ...validation.value, attachments });
+
+    const event = await prisma.event.findFirst({
+      where: { title: { startsWith: validation.value.event }, isUpcoming: true, isPublished: true },
+    });
+    if (!event) return NextResponse.json({ error: "The selected event is no longer accepting applications." }, { status: 400 });
+
+    const [licenseFileUrl, healthCertUrl, civilIdUrl, businessLogoUrl] = await Promise.all(
+      fileNames.map((name) => uploadRegistrationFile(files[name] as File)),
+    );
+    const registration = await prisma.registration.create({
+      data: {
+        eventId: event.id,
+        fullName: validation.value.contactPerson,
+        email: validation.value.email,
+        phone: validation.value.phone,
+        companyName: validation.value.businessName,
+        instagram: validation.value.instagram || null,
+        vendorCategory: validation.value.category,
+        description: validation.value.description,
+        licenseFileUrl,
+        healthCertUrl,
+        civilIdUrl,
+        businessLogoUrl,
+      },
+      include: { event: { select: { title: true } } },
+    });
+
+    try {
+      await sendRegistrationNotification(registration);
+    } catch (error) {
+      console.error("Vendor application notification failed:", error);
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Vendor application failed:", error);
