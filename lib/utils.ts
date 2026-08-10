@@ -61,3 +61,36 @@ export function isValidPhone(phone: string): boolean {
   const phoneRegex = /^[+]?[\d\s\-()]+$/;
   return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 8;
 }
+
+// POST to a form endpoint and read the response defensively. A failing
+// serverless function can return a platform HTML error page (500/504) instead
+// of JSON; calling response.json() on that throws an opaque parser error
+// ("The string did not match the expected pattern" on Safari/iOS). Read the
+// body as text and only then attempt to parse it, so callers always get a
+// meaningful message.
+export async function submitForm(
+  url: string,
+  init: RequestInit,
+  fallbackError = 'Something went wrong. Please try again.',
+): Promise<{ ok: boolean; data: { error?: string; success?: boolean } }> {
+  let response: Response;
+  try {
+    response = await fetch(url, init);
+  } catch {
+    throw new Error('Network error. Please check your connection and try again.');
+  }
+
+  const text = await response.text();
+  let data: { error?: string; success?: boolean } = {};
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // Non-JSON body — the server likely crashed or timed out.
+      throw new Error(response.ok ? fallbackError : `Server error (${response.status}). Please try again.`);
+    }
+  }
+
+  if (!response.ok) throw new Error(data.error || fallbackError);
+  return { ok: true, data };
+}

@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { VENDOR_CATEGORIES, VENDOR_EVENTS } from "@/lib/form-validation";
+import { submitForm } from "@/lib/utils";
 
 const documents = [
   ["companyLicense", "📄 Company License"],
@@ -22,9 +23,7 @@ export default function VendorApplicationForm() {
     const data = new FormData(form);
     data.set("event", selectedEvent);
     try {
-      const response = await fetch("/api/vendor-applications", { method: "POST", body: data });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Application could not be submitted.");
+      await submitForm("/api/vendor-applications", { method: "POST", body: data }, "Application could not be submitted.");
       form.reset(); setStatus("sent"); setNotice("Application submitted. We’ll contact you within 3–5 business days.");
     } catch (error) {
       setStatus("error"); setNotice(error instanceof Error ? error.message : "Application could not be submitted.");

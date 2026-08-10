@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { sendContactEmail } from "@/lib/email";
 import { validateContactPayload } from "@/lib/form-validation";
 
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
 // POST /api/contact - Send contact form email (public)
 export async function POST(request: NextRequest) {
   try {

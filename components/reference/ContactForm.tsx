@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { submitForm } from "@/lib/utils";
 
 export default function ContactForm() {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
@@ -13,9 +14,7 @@ export default function ContactForm() {
     const form = event.currentTarget;
     const data = Object.fromEntries(new FormData(form));
     try {
-      const response = await fetch("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Message could not be sent.");
+      await submitForm("/api/contact", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }, "Message could not be sent.");
       form.reset();
       setStatus("sent");
       setMessage("Message sent. We’ll be in touch soon.");

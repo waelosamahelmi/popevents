@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 // nodemailer + reading uploads into buffers require the Node.js runtime.
 // The Edge/Workers runtime caps CPU + memory ("Worker exceeded resource limits").
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const documents = [
   ["companyLicense", "Company License"],

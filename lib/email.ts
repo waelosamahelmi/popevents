@@ -47,6 +47,11 @@ async function getSmtpTransport() {
     port: cfg.port,
     secure: cfg.secure, // true for 465, false for other ports (STARTTLS)
     auth: { user: cfg.user, pass: cfg.pass },
+    // Fail fast instead of hanging until the serverless function is killed,
+    // which would return a non-JSON platform error page to the browser.
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
   });
   return { transport, cfg };
 }
