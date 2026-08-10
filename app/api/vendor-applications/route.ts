@@ -46,21 +46,9 @@ export async function POST(request: NextRequest) {
       }),
     );
 
-    await sendVendorApplicationNotification({
-      event: validation.value.event,
-      businessName: validation.value.businessName,
-      contactPerson: validation.value.contactPerson,
-      email: validation.value.email,
-      phone: validation.value.phone,
-      category: validation.value.category,
-      description: validation.value.description,
-      instagram: validation.value.instagram,
-      attachments,
-    });
-
-    // Best-effort: record the application for the admin panel. The notification
-    // email (with attachments) is the guaranteed delivery path, so a DB hiccup
-    // here must never fail the submission.
+    // Persist the application first so the record is never lost if the
+    // notification email fails (e.g. SMTP misconfigured). Best-effort: a DB
+    // hiccup must not, on its own, block a submission.
     try {
       const event = await prisma.event.findFirst({
         where: { title: { startsWith: validation.value.event }, isUpcoming: true, isPublished: true },
@@ -81,6 +69,29 @@ export async function POST(request: NextRequest) {
       }
     } catch (error) {
       console.error("Vendor application record could not be saved:", error);
+    }
+
+    // Email the documents as attachments. If this fails, surface the real
+    // reason (SMTP is the usual culprit) instead of a generic message.
+    try {
+      await sendVendorApplicationNotification({
+        event: validation.value.event,
+        businessName: validation.value.businessName,
+        contactPerson: validation.value.contactPerson,
+        email: validation.value.email,
+        phone: validation.value.phone,
+        category: validation.value.category,
+        description: validation.value.description,
+        instagram: validation.value.instagram,
+        attachments,
+      });
+    } catch (error) {
+      console.error("Vendor application email failed:", error);
+      const reason = error instanceof Error ? error.message : "unknown error";
+      return NextResponse.json(
+        { error: `We received your details but the notification email failed to send (${reason}). Please contact us directly so we don't miss your application.` },
+        { status: 502 },
+      );
     }
 
     return NextResponse.json({ success: true });
