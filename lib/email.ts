@@ -29,7 +29,11 @@ async function getSmtpConfig() {
   const user = s?.smtpUser || process.env.SMTP_USER || '';
   const pass = s?.smtpPass || process.env.SMTP_PASS || '';
   const port = s?.smtpPort ?? parseInt(process.env.SMTP_PORT || '465', 10);
-  const secure = s?.smtpSecure ?? (process.env.SMTP_SECURE === 'true');
+  const configuredSecure = s?.smtpSecure ?? (process.env.SMTP_SECURE === 'true');
+  // Port and TLS mode must agree or the handshake fails instantly (a mismatched
+  // secure flag is the most common SMTP misconfig). 465 is implicit TLS;
+  // 587/25 use STARTTLS. Derive it from the port so the flag can't contradict it.
+  const secure = port === 465 ? true : port === 587 || port === 25 ? false : configuredSecure;
   const from = s?.smtpFrom || process.env.SMTP_FROM || user;
   const notificationEmail =
     s?.notificationEmail || process.env.NOTIFICATION_EMAIL || 'admin@popeventskuwait.com';
@@ -141,6 +145,8 @@ export async function sendContactEmail(data: {
     await transport.sendMail({
       from: `"Pop Events Contact Form" <${cfg.from}>`,
       to: cfg.notificationEmail,
+      replyTo: data.email || undefined,
+      envelope: { from: cfg.user, to: cfg.notificationEmail },
       subject: `Contact Form: ${data.subject}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -169,6 +175,9 @@ export async function sendVendorApplicationNotification(application: {
   const { transport, cfg } = smtp;
   await transport.sendMail({
     from: `"Pop Events" <${cfg.from}>`, to: cfg.notificationEmail,
+    replyTo: application.email || undefined,
+    // MAIL FROM must be the authenticated mailbox or Hostinger rejects the send.
+    envelope: { from: cfg.user, to: cfg.notificationEmail },
     subject: `New Vendor Application: ${application.businessName} - ${application.event}`,
     html: `<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto"><h2>New Vendor Application</h2><p><b>Event:</b> ${application.event}</p><p><b>Business:</b> ${application.businessName}</p><p><b>Contact:</b> ${application.contactPerson}</p><p><b>Email:</b> ${application.email}</p><p><b>Phone:</b> ${application.phone}</p><p><b>Instagram:</b> ${application.instagram || '—'}</p><p><b>Category:</b> ${application.category}</p><p><b>Description:</b> ${application.description}</p><p>The company license, health certificate, Civil ID, and business logo are attached to this email.</p></div>`,
     attachments: application.attachments,
