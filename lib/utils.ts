@@ -62,6 +62,46 @@ export function isValidPhone(phone: string): boolean {
   return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 8;
 }
 
+// Downscale + re-encode an image File in the browser so large phone photos
+// don't blow past the serverless request-body limit (Vercel caps it at
+// ~4.5 MB, which four raw iPhone photos exceed on their own → HTTP 413).
+// Non-images (e.g. PDFs) and anything that fails to decode are returned as-is.
+export async function compressImageFile(
+  file: File,
+  maxDimension = 1600,
+  quality = 0.72,
+): Promise<File> {
+  if (typeof document === "undefined" || !file.type.startsWith("image/")) return file;
+
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch {
+    return file; // Can't decode (e.g. HEIC on some browsers) — send the original.
+  }
+
+  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    bitmap.close?.();
+    return file;
+  }
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close?.();
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+  if (!blob || blob.size >= file.size) return file; // No win — keep the smaller original.
+
+  const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+  return new File([blob], name, { type: "image/jpeg" });
+}
+
 // POST to a form endpoint and read the response defensively. A failing
 // serverless function can return a platform HTML error page (500/504) instead
 // of JSON; calling response.json() on that throws an opaque parser error

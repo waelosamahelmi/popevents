@@ -2,7 +2,11 @@
 
 import { FormEvent, useState } from "react";
 import { VENDOR_CATEGORIES, VENDOR_EVENTS } from "@/lib/form-validation";
-import { submitForm } from "@/lib/utils";
+import { compressImageFile, submitForm } from "@/lib/utils";
+
+// Stay under Vercel's ~4.5 MB serverless request-body limit, leaving headroom
+// for the text fields and multipart overhead.
+const MAX_TOTAL_UPLOAD = 4.2 * 1024 * 1024;
 
 const documents = [
   ["companyLicense", "📄 Company License"],
@@ -23,6 +27,22 @@ export default function VendorApplicationForm() {
     const data = new FormData(form);
     data.set("event", selectedEvent);
     try {
+      // Compress image documents (phone photos) before upload, then make sure
+      // the combined size fits the serverless request-body limit.
+      let total = 0;
+      for (const [name] of documents) {
+        const file = data.get(name);
+        if (file instanceof File && file.size > 0) {
+          const prepared = await compressImageFile(file);
+          data.set(name, prepared);
+          total += prepared.size;
+        }
+      }
+      if (total > MAX_TOTAL_UPLOAD) {
+        setStatus("error");
+        setNotice("Your documents are too large to submit together (about 4 MB max). Please upload smaller files or clearer, lighter photos.");
+        return;
+      }
       await submitForm("/api/vendor-applications", { method: "POST", body: data }, "Application could not be submitted.");
       form.reset(); setStatus("sent"); setNotice("Application submitted. We’ll contact you within 3–5 business days.");
     } catch (error) {
